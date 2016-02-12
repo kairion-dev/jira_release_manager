@@ -1,0 +1,14 @@
+{
+  "name": "release_page",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Karl Fritsche",
+  "license": "ISC",
+  "dependencies": {
+    "nedb": "^1.7.4"
+  }
+}

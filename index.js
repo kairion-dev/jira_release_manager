@@ -1,16 +1,26 @@
 var
   Promise = require("bluebird"),
+  kcommon = require('./lib/common.js'),
   Datastore = Promise.promisifyAll(require('nedb')),
   Git = require("nodegit"),
-  db = {};
-
-db.tags = new Datastore({ filename: './tags', autoload: true });
-db.tags = Promise.promisifyAll(db.tags);
+  db = {
+    tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
+    tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
+  },
+  JiraApi = require('./lib/jira.js').Jira,
+  jira = new JiraApi({
+    host: 'kairion.atlassian.net',
+    username: 'kfritsche',
+    password: 'xxxxxxxx',
+    epicsKey: 'customfield_10500',
+    newCapKey: 'customfield_13103'
+  });
 
 // @todo: are there better ways for this globals?
 var globalRepo, knownTags = {};
 
-db.tags.findAsync({})
+db.tags
+  .findAsync({})
   .then((docs) => {
     return Promise.map(docs, (tag, i, total) => {
       knownTags[tag.tag] = tag;
@@ -83,13 +93,15 @@ db.tags.findAsync({})
             })
             // save all tags with their tickets
             .then(function(commits) {
-              tickets = tickets.filter(function(value, index, self) {
-                return self.indexOf(value) === index;
-              });
+              tickets = kcommon.uniqueArray(tickets);
               tickets.sort();
               var result = {tag: tag, tickets: tickets, commits: commits.length};
-              db.tags.update({tag: tag}, {$set: result}, {upsert: true});
-              return result;
+              return new Promise((resolve, reject) => {
+                db.tags.update({tag: tag}, {$set: result}, {upsert: true}, (err, numUpdated) => {
+                  if (err) reject(err);
+                  else resolve(result);
+                });
+              });
             })
             .catch(function(e) {
               console.log('Error walking though the history of tag ' + tag + ': ' + e);
@@ -100,8 +112,33 @@ db.tags.findAsync({})
         });
     });
   })
-  .then(function(tags) {
+  .then((tags) => {
+    console.log('Processed all tags.');
 //    console.log(tags);
+    // Updating ALL known tickets
+    var tickets_to_process = [];
+    return db.tags.findAsync({})
+      .map((doc) => {
+        return Promise.map(doc.tickets,
+          (ticket) => {
+            if (!ticket.startsWith('KD-0')) {
+              tickets_to_process.push(ticket);
+            }
+          })
+      })
+      .then(() => {
+        return kcommon.uniqueArray(tickets_to_process);
+      })
+      .then((tickets) => {
+        var fetchedIssues = {};
+        db.tickets.findAsync({})
+          .map((ticket) => {
+            fetchedIssues[ticket.key] = ticket;
+          })
+          .then(() => {
+            return Jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
+          });
+      })
   })
   .catch((e) => {
     console.log('Error processing all tags: ' + e);

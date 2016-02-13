@@ -2,4 +2,4 @@ node_modules
 .idea
 start.sh
 sync_back.sh
-db
+tags

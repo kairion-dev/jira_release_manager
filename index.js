@@ -1,111 +1,99 @@
 var Datastore = require('nedb'),
-  db = new Datastore({ filename: './db', autoload: true }),
-  Git = require("nodegit");
+  Git = require("nodegit"),
+  Promise = require("bluebird"),
+  db = {};
 
-console.log("hello world");
-
-//var doc = { hello: 'world'
-//  , n: 5
-//  , today: new Date()
-//  , nedbIsAwesome: true
-//  , notthere: null
-//  , notToBeSaved: undefined  // Will not be saved
-//  , fruits: [ 'apple', 'orange', 'pear' ]
-//  , infos: { name: 'nedb' }
-//};
-//
-//db.insert(doc, function (err, newDoc) {   // Callback is optional
-//  // newDoc is the newly inserted document, including its _id
-//  // newDoc has no key called notToBeSaved since its value was undefined
-//  console.log(newDoc, err);
-//});
-//
-//db.find({hello: 'world'}, function(err, docs) {
-//  console.log(docs);
-//});
-
-function printCommit(commit, msg) {
-  console.log(msg + ' ' + commit.date() + ' ' + commit.sha() + ' ' + commit.message());
-}
+db.tags = new Datastore({ filename: './tags', autoload: true });
 
 // Open the repository directory.
 var globalRepo;
 Git.Repository.openBare("/home/attrib/kairion/kairion.git")
   //.then(function(repo) {
-  //  var a = repo.fetch('origin', {
-  //    callbacks: [function() {
-  //      console.log(args);
-  //    }]
-  //  });
-  //  return a;
+  // @todo: auth
+  //  return repo.fetch('origin');
   //})
-  .then(function(repo) {
+  .then((repo) => {
+    // @todo: how is this done better?
     globalRepo = repo;
     return Git.Tag.list(repo);
   })
-  .then(function(tagList) {
+  .then((tagList) => {
     var releaseTags = [];
     tagList.forEach(function(tag) {
       if (tag.match(/^\d+\.\d+\.\d+/)) {
         releaseTags.push(tag);
       }
     });
-    releaseTags.sort().reverse();
-    return releaseTags;
-  })
-  .then(function(tags) {
-//    console.log(tags);
-    var commit1;
-    globalRepo.getTagByName(tags[0])
-      .then(function(tag) {
-        return Git.Commit.lookup(tag.owner(), tag.targetId());
-      })
-      .then(function (commit) {
-        commit1 = commit;
-        return globalRepo.getTagByName(tags[1]);
-      })
-      .then(function(tag) {
-        return Git.Commit.lookup(tag.owner(), tag.targetId());
-      })
-      .then(function (commit) {
-        var tickets = [];
-        console.log('start: ' + commit1.date() + ' ' + commit1.sha());
-        console.log('end: ' + commit.date() + ' ' + commit.sha());
+    releaseTags.sort().reverse();//.splice(10, releaseTags.length - 10);
+    return Promise.map(releaseTags, (tag, i, total) => {
+      if (i == total) {
+        return;
+      }
+      var commit1;
+      return globalRepo.getTagByName(tag)
+        .then(function(tag) {
+          return Git.Commit.lookup(tag.owner(), tag.targetId());
+        })
+        .then(function (commit) {
+          commit1 = commit;
+          return globalRepo.getTagByName(releaseTags[i + 1]);
+        })
+        .then(function(tag) {
+          return Git.Commit.lookup(tag.owner(), tag.targetId());
+        })
+        .then(function (commit) {
+          var tickets = [];
+          console.log('start: ' + commit1.date() + ' ' + commit1.sha());
+          console.log('end: ' + commit.date() + ' ' + commit.sha());
 
-        var revwalk = commit1.owner().createRevWalk();
-        revwalk.sorting(Git.Revwalk.SORT.REVERSE);
-        revwalk.push(commit1.id());
+          var revwalk = commit1.owner().createRevWalk();
+          revwalk.sorting(Git.Revwalk.SORT.TIME);
+          revwalk.push(commit1.id());
 
-        revwalk.getCommitsUntil(function(c) {
-          if (!c || c.sha() == commit.sha()) {
-            return false;
-          }
-          var result = c.message().match(/(K..?-\d+)/);
-          if (result && result.length > 1) {
-            if (result[1] == 'KD-0') {
-              tickets.push(c.message().trim());
-            }
-            else {
-              tickets.push(result[1]);
-            }
-          }
-          return true;
-        }).then(function(commits) {
-          console.log('Searched commits: ' + commits.length);
-
-          tickets = tickets.filter(function(value, index, self) {
-            return self.indexOf(value) === index;
-          });
-          console.log('Found Tickets: ' + tickets.length + ' = ', tickets);
+          return revwalk.getCommitsUntil(
+            function(c) {
+              if (!c || c.date() <= commit.date()) {
+                return false;
+              }
+              var result = c.message().match(/^(K..?-\d+)/);
+              if (result && result.length > 1) {
+                if (result[1] == 'KD-0') {
+                  tickets.push(c.message().trim());
+                }
+                else {
+                  tickets.push(result[1]);
+                }
+              }
+              return true;
+            })
+            .then(function(commits) {
+              tickets = tickets.filter(function(value, index, self) {
+                return self.indexOf(value) === index;
+              });
+              tickets.sort();
+              // @todo: how to return now only when callback was finished?
+              var result = {tag: tag, tickets: tickets, commits: commits.length};
+              db.tags.update({tag: tag}, {$set: result}, {upsert: true});
+              return result;
+            })
+            .catch(function(e) {
+              console.log(e);
+            });
         })
         .catch(function(e) {
           console.log(e);
         });
-      })
-      .catch(function(e) {
-        console.log(e);
-      });
+    });
   })
-  .catch(function(e) {
+  .then(function(tags) {
+    console.log(tags);
+  })
+  .then(() => {
+    console.log('next');
+  })
+  .finally(() => {
+    console.log('finished');
+  })
+  .catch((e) => {
     console.log(e);
   });

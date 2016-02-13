@@ -9,6 +9,7 @@
   "author": "Karl Fritsche",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.3.0",
     "nedb": "^1.7.4",
     "nodegit": "^0.11.1"
   }

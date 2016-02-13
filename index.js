@@ -1,22 +1,33 @@
-var Datastore = require('nedb'),
-  Git = require("nodegit"),
+var
   Promise = require("bluebird"),
+  Datastore = Promise.promisifyAll(require('nedb')),
+  Git = require("nodegit"),
   db = {};
 
 db.tags = new Datastore({ filename: './tags', autoload: true });
+db.tags = Promise.promisifyAll(db.tags);
 
-// Open the repository directory.
-var globalRepo;
-Git.Repository.openBare("/home/attrib/kairion/kairion.git")
+// @todo: are there better ways for this globals?
+var globalRepo, knownTags = {};
+
+db.tags.findAsync({})
+  .then((docs) => {
+    return Promise.map(docs, (tag, i, total) => {
+      knownTags[tag.tag] = tag;
+    })
+  })
+  // Open the repository directory.
+  .then(() => {return Git.Repository.openBare("/home/attrib/kairion/kairion.git")})
   //.then(function(repo) {
   // @todo: auth
   //  return repo.fetch('origin');
   //})
+  // Get list of tags
   .then((repo) => {
-    // @todo: how is this done better?
     globalRepo = repo;
     return Git.Tag.list(repo);
   })
+  // Retrieve the Tickets for each tag
   .then((tagList) => {
     var releaseTags = [];
     tagList.forEach(function(tag) {
@@ -24,12 +35,14 @@ Git.Repository.openBare("/home/attrib/kairion/kairion.git")
         releaseTags.push(tag);
       }
     });
-    releaseTags.sort().reverse();//.splice(10, releaseTags.length - 10);
+    releaseTags.sort().reverse();
     return Promise.map(releaseTags, (tag, i, total) => {
-      if (i == total) {
+      // ignore already processed tags
+      if (i == total || knownTags[tag]) {
         return;
       }
       var commit1;
+      // First the commit referenced by the tag is needed
       return globalRepo.getTagByName(tag)
         .then(function(tag) {
           return Git.Commit.lookup(tag.owner(), tag.targetId());
@@ -38,20 +51,22 @@ Git.Repository.openBare("/home/attrib/kairion/kairion.git")
           commit1 = commit;
           return globalRepo.getTagByName(releaseTags[i + 1]);
         })
+        // Then the commit reference by the tag before is needed
         .then(function(tag) {
           return Git.Commit.lookup(tag.owner(), tag.targetId());
         })
+        // Walking through the history and get all tickets in the commit message
         .then(function (commit) {
           var tickets = [];
-          console.log('start: ' + commit1.date() + ' ' + commit1.sha());
-          console.log('end: ' + commit.date() + ' ' + commit.sha());
-
           var revwalk = commit1.owner().createRevWalk();
           revwalk.sorting(Git.Revwalk.SORT.TIME);
           revwalk.push(commit1.id());
 
           return revwalk.getCommitsUntil(
             function(c) {
+              // currently I use the date to break. Somehow waiting till the sha matches results in all commits
+              // Probably because of the merging shit.
+              // @todo: This means we lose all tickets which were worked on in a feature branch before the release
               if (!c || c.date() <= commit.date()) {
                 return false;
               }
@@ -66,34 +81,28 @@ Git.Repository.openBare("/home/attrib/kairion/kairion.git")
               }
               return true;
             })
+            // save all tags with their tickets
             .then(function(commits) {
               tickets = tickets.filter(function(value, index, self) {
                 return self.indexOf(value) === index;
               });
               tickets.sort();
-              // @todo: how to return now only when callback was finished?
               var result = {tag: tag, tickets: tickets, commits: commits.length};
               db.tags.update({tag: tag}, {$set: result}, {upsert: true});
               return result;
             })
             .catch(function(e) {
-              console.log(e);
+              console.log('Error walking though the history of tag ' + tag + ': ' + e);
             });
         })
         .catch(function(e) {
-          console.log(e);
+          console.log('Error processing tag ' + tag + ': ' + e);
         });
     });
   })
   .then(function(tags) {
-    console.log(tags);
-  })
-  .then(() => {
-    console.log('next');
-  })
-  .finally(() => {
-    console.log('finished');
+//    console.log(tags);
   })
   .catch((e) => {
-    console.log(e);
+    console.log('Error processing all tags: ' + e);
   });

@@ -1,17 +1,29 @@
 {
   "name": "release_page",
   "version": "1.0.0",
-  "description": "",
+  "description": "Jira Release Manager",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Karl Fritsche",
-  "license": "ISC",
+  "author": {
+    "name": "Karl Fritsche",
+    "email": "karl.fritsche@kairion.de"
+  },
+  "engine": {
+    "node": ">=0.4.0"
+  },
+  "licenses": [
+    {
+      "type": "The MIT License",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
+  ],
   "dependencies": {
     "bluebird": "^3.3.0",
     "jira": "^0.9.2",
     "nedb": "^1.7.4",
-    "nodegit": "^0.11.1"
+    "nodegit": "^0.11.1",
+    "oauth": "^0.9.14"
   }
 }

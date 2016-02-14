@@ -1,5 +1,12 @@
 # Jira Release Manager
 
+JRM is a tool to show all Jira tickets between two git tags (releases).
+
+## Features
+
+* Parses single repository and fetches all ticket infos (issue keys needs to be in commit message)
+* Shows Tags in a WebInterface and groups by epic, parent tickets
+
 ## Set up OAuth
 
 1. Generate a key
@@ -16,7 +23,7 @@
 
 ## Open ideas / ToDos
 
-* WebInterface to view all releases and tickets deployed
+* (WIP) WebInterface to view all releases and tickets deployed
 * Possibility to set release date to a tag
 * Configuration of git repository location
 * Multiple git repositories

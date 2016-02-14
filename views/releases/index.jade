@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+    h1.page-header= title
+
+    .table-responsive
+        table.table.table-striped
+            thead
+                tr
+                    th Release
+                    th Commits
+                    th Tickets
+                    th Date
+            tbody
+                each release in releases
+                    tr
+                        td
+                            a(href='/releases/' + release.tag)=release.tag
+                        td= release.commits
+                        td= release.tickets.length
+                        td= release.last_commit_date

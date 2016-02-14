@@ -2,14 +2,11 @@
   "name": "release_page",
   "version": "1.0.0",
   "description": "Jira Release Manager",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "author": {
-    "name": "Karl Fritsche",
-    "email": "karl.fritsche@kairion.de"
-  },
+  "author": "Karl Fritsche <karl.fritsche@kairion.de>",
   "engine": {
     "node": ">=0.4.0"
   },
@@ -21,9 +18,16 @@
   ],
   "dependencies": {
     "bluebird": "^3.3.0",
+    "body-parser": "~1.13.2",
+    "cookie-parser": "~1.3.5",
+    "debug": "~2.2.0",
+    "express": "~4.13.1",
+    "jade": "~1.11.0",
     "jira": "https://github.com/kairion-dev/node-jira.git#master",
+    "morgan": "~1.6.1",
     "nedb": "^1.7.4",
     "nodegit": "^0.11.1",
+    "serve-favicon": "~2.3.0",
     "oauth": "^0.9.14"
   }
 }

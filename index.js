@@ -1,7 +1,9 @@
 var
   Promise = require("bluebird"),
-  kcommon = require('./lib/common.js'),
   Datastore = Promise.promisifyAll(require('nedb')),
+  debug = require('debug')('release_page:server'),
+  http = require('http'),
+  kcommon = require('./lib/common.js'),
   JiraApi = require('./lib/jira.js').Jira,
   Git = require("./lib/git.js").GitHistory,
   fs = require('fs'),
@@ -14,10 +16,10 @@ var
     epicsKey: 'customfield_10500',
     newCapKey: 'customfield_13103',
     oauth: {
-      consumer_key: '',
+      consumer_key: '94S37YKpXdmmbENb',
       consumer_secret: fs.readFileSync(process.env['HOME'] + '/.ssh/jira_rsa', "utf8"),
-      access_token: '',
-      access_token_secret: ''
+      access_token: 'VnBpdujgzdSHtJnTOXSY6xfqml2Y6NZg',
+      access_token_secret: 'nhclzMeidDRZiAOeVyIa0BI5CtAe3Kk2'
     },
     db: db
   }),
@@ -25,7 +27,8 @@ var
     git_path: '/home/attrib/kairion/kairion.git',
     git_name: 'kairion',
     db: db
-  });
+  }),
+  app = require('./app.js')(db, jira);
 
 git
   .initialize()
@@ -48,7 +51,7 @@ git
       })
       .then((tickets) => {
         var fetchedIssues = {};
-        db.tickets.findAsync({})
+        return db.tickets.findAsync({})
           .map((ticket) => {
             fetchedIssues[ticket.key] = ticket;
           })
@@ -57,6 +60,32 @@ git
             return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
           });
       })
+  })
+  .then(() => {
+    console.log('Inital fetch done, starting app');
+
+    var port = kcommon.normalizePort(process.env.PORT || '3000');
+    app.set('port', port);
+
+    /**
+     * Create HTTP server.
+     */
+
+    var server = http.createServer(app);
+
+    /**
+     * Listen on provided port, on all network interfaces.
+     */
+
+    server.listen(port);
+    server.on('error', kcommon.onError);
+    server.on('listening', function onListening() {
+      var addr = server.address();
+      var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+      debug('Listening on ' + bind);
+    });
   })
   .catch((e) => {
     console.log('Error processing all tags: ' + e);

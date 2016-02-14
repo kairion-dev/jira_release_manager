@@ -1,8 +1,21 @@
 # Jira Release Manager
 
+## Set up OAuth
+
+1. Generate a key
+   * `openssl genrsa -out ~/.ssh/jira_rsa 2048`
+   * `openssl rsa -in ~/.ssh/jira_rsa -pubout > ~/.ssh/jira_rsa.pub`
+2. Setup Application in Jira (Preferences > Add-ons > Select Application Links /plugins/servlet/applinks/listApplicationLinks)
+   * Enable input link
+   * Consumer Name: Jira Release Manager
+   * Consumer key: Create one
+   * Public: Use public key from created key
+3. Add consumer key to config
+4. Call `node oauth.js`. Get oauth verifier from the callback url
+5. Add access key to config
+
 ## Open ideas / ToDos
 
-* Add OAuth support for Jira
 * WebInterface to view all releases and tickets deployed
 * Possibility to set release date to a tag
 * Configuration of git repository location

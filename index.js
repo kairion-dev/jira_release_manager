@@ -2,18 +2,24 @@ var
   Promise = require("bluebird"),
   kcommon = require('./lib/common.js'),
   Datastore = Promise.promisifyAll(require('nedb')),
+  JiraApi = require('./lib/jira.js').Jira,
   Git = require("nodegit"),
+  fs = require('fs'),
   db = {
     tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
     tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
   },
-  JiraApi = require('./lib/jira.js').Jira,
   jira = new JiraApi({
     host: 'kairion.atlassian.net',
-    username: 'kfritsche',
-    password: 'xxxxxxxx',
     epicsKey: 'customfield_10500',
-    newCapKey: 'customfield_13103'
+    newCapKey: 'customfield_13103',
+    oauth: {
+      consumer_key: '',
+      consumer_secret: fs.readFileSync(process.env['HOME'] + '/.ssh/jira_rsa', "utf8"),
+      access_token: '',
+      access_token_secret: ''
+    },
+    db: db.tickets
   });
 
 // @todo: are there better ways for this globals?
@@ -136,7 +142,8 @@ db.tags
             fetchedIssues[ticket.key] = ticket;
           })
           .then(() => {
-            return Jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
+            console.log('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
+            return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
           });
       })
   })

@@ -3,7 +3,7 @@ var
   kcommon = require('./lib/common.js'),
   Datastore = Promise.promisifyAll(require('nedb')),
   JiraApi = require('./lib/jira.js').Jira,
-  Git = require("./lib/git.js"),
+  Git = require("./lib/git.js").GitHistory,
   fs = require('fs'),
   db = {
     tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
@@ -21,7 +21,7 @@ var
     },
     db: db
   }),
-  git = Git.GitHistory({
+  git = new Git({
     git_path: '/home/attrib/kairion/kairion.git',
     git_name: 'kairion',
     db: db

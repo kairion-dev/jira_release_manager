@@ -1,0 +1,16 @@
+default:
+  jira:
+    host: 'kairion.atlassian.net'
+    epicsKey: 'customfield_10500'
+    newCapKey: 'customfield_13103'
+    username: 'your_username - check config/config.yaml'
+    password: 'your_password - check config/config.yaml'
+# alternatively, use oath to authorize. Delete both fields username and password. The old access data:
+#    oauth:
+#      consumer_key: '94S37YKpXdmmbENb'
+#      consumer_secret: '/.ssh/jira_rsa' # use path relative to home path
+#      access_token: 'VnBpdujgzdSHtJnTOXSY6xfqml2Y6NZg'
+#      access_token_secret: 'nhclzMeidDRZiAOeVyIa0BI5CtAe3Kk2'
+  git:
+    git_path: 'directory_to_git_branch - check config/config.yaml'
+    git_name: 'name_of_the_branch - check config/config.yaml'

@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var log = require('../lib/logger.js');
 
 /* GET index page. */
 router.get('/', function(req, res) {
@@ -17,7 +18,7 @@ router.get('/', function(req, res) {
       res.render('releases/index', templateVariables);
     })
     .catch((e) => {
-      console.log(e);
+      log.error(e);
       res.render('error', {
         message: 'Error while fetching documents: ' + e.message,
         error: e
@@ -43,42 +44,26 @@ router.get('/:id', function(req, res, next) {
         req.jira
           .getIssues(doc.tickets)
           .then((tickets) => {
-            var tmp = {}, childs = {}, epic = {}, resultTickets = [];
+            var tmp = {}, children = {}, resultTickets = [];
             tickets.forEach((ticket) => {
               tmp[ticket.key] = ticket;
               if (ticket.parent) {
-                if (!childs[ticket.parent]) {
-                  childs[ticket.parent] = [];
+                if (!children[ticket.parent]) {
+                  children[ticket.parent] = [];
                 }
-                childs[ticket.parent].push(ticket.key);
-              }
-              if (ticket.epic) {
-                if (!epic[ticket.epic]) {
-                  epic[ticket.epic] = [];
-                }
-                epic[ticket.epic].push(ticket.key);
+                children[ticket.parent].push(ticket.key);
               }
             });
-            Object.keys(childs).forEach((ticket) => {
+            Object.keys(children).forEach((ticket) => {
               tmp[ticket].children = [];
-              childs[ticket].forEach((child_id) => {
+              children[ticket].forEach((child_id) => {
                 tmp[ticket].children.push(tmp[child_id]);
                 delete tmp[child_id];
               });
-            });
-            Object.keys(epic).forEach((ticket) => {
-              tmp[ticket].children = [];
-              epic[ticket].forEach((child_id) => {
-                tmp[ticket].children.push(tmp[child_id]);
-                delete tmp[child_id];
-              });
-              resultTickets.push(tmp[ticket]);
-              delete tmp[ticket];
             });
             Object.keys(tmp).forEach((ticket) => {
               resultTickets.push(tmp[ticket]);
             });
-
             templateVariables.tickets = resultTickets;
             res.render('releases/show', templateVariables);
           })
@@ -91,7 +76,7 @@ router.get('/:id', function(req, res, next) {
       }
     })
     .catch((e) => {
-      console.log(e);
+      log.error(e);
       res.render('error', {
         message: 'Error while fetching documents: ' + e.message,
         error: e

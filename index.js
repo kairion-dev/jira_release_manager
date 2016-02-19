@@ -1,4 +1,5 @@
 var
+  log = require('./lib/logger.js'),
   Promise = require("bluebird"),
   Datastore = Promise.promisifyAll(require('nedb')),
   debug = require('debug')('release_page:server'),
@@ -10,33 +11,28 @@ var
   db = {
     tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
     tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
-  },
-  jira = new JiraApi({
-    host: 'kairion.atlassian.net',
-    epicsKey: 'customfield_10500',
-    newCapKey: 'customfield_13103',
-    oauth: {
-      consumer_key: '94S37YKpXdmmbENb',
-      consumer_secret: fs.readFileSync(process.env['HOME'] + '/.ssh/jira_rsa', "utf8"),
-      access_token: 'VnBpdujgzdSHtJnTOXSY6xfqml2Y6NZg',
-      access_token_secret: 'nhclzMeidDRZiAOeVyIa0BI5CtAe3Kk2'
-    },
-    db: db
-  }),
-  git = new Git({
-    git_path: '/home/attrib/kairion/kairion.git',
-    git_name: 'kairion',
-    db: db
-  }),
+  };
+
+// load configs
+var config = require('node-yaml-config').load('./config/config.yaml');
+if (config.jira && config.jira.oauth && config.jira.oauth.consumer_secret) {
+  config.jira.oauth.consumer_secret = fs.readFileSync(process.env['HOME'] + config.jira.oauth.consumer_secret, "utf8");
+  console.log(config.jira);
+}
+
+// load release-manager
+var
+  jira = new JiraApi(config.jira, db),
+  git = new Git(config.git, db),
   app = require('./app.js')(db, jira);
 
 git
   .initialize()
   .then((tags) => {
-    console.log('Processed all tags.');
-//    console.log(tags);
+    log.info('Processed all tags.');
     // Updating ALL known tickets
     var tickets_to_process = [];
+
     return db.tags.findAsync({})
       .map((doc) => {
         return Promise.map(doc.tickets,
@@ -56,13 +52,13 @@ git
             fetchedIssues[ticket.key] = ticket;
           })
           .then(() => {
-            console.log('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
+            log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
             return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
           });
       })
   })
   .then(() => {
-    console.log('Inital fetch done, starting app');
+    log.info('Inital fetch done, starting app');
 
     var port = kcommon.normalizePort(process.env.PORT || '3000');
     app.set('port', port);
@@ -88,5 +84,5 @@ git
     });
   })
   .catch((e) => {
-    console.log('Error processing all tags: ' + e);
+    log.error('Error processing all tags: ' + e);
   });

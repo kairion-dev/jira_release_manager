@@ -7,8 +7,11 @@
     "start": "node index.js"
   },
   "author": "Karl Fritsche <karl.fritsche@kairion.de>",
+  "contributors": [
+    "Manuel Wick <manuelwick@gmx.de>"
+  ],
   "engine": {
-    "node": ">=0.4.0"
+    "node": ">=4.3.1"
   },
   "licenses": [
     {
@@ -26,8 +29,10 @@
     "jira": "https://github.com/kairion-dev/node-jira.git#master",
     "morgan": "~1.6.1",
     "nedb": "^1.7.4",
+    "node-yaml-config": "0.0.4",
     "nodegit": "^0.11.1",
+    "oauth": "^0.9.14",
     "serve-favicon": "~2.3.0",
-    "oauth": "^0.9.14"
+    "winston": "^2.1.1"
   }
 }

@@ -52,6 +52,14 @@ git
             fetchedIssues[ticket.key] = ticket;
           })
           .then(() => {
+            /* only for debug purposes - remove after fixed
+            var difference = Object.keys(fetchedIssues).filter((x) => {
+              return tickets.indexOf(x) == -1;
+            });
+            console.log(Object.keys(fetchedIssues).sort().length);
+            console.log(tickets.sort().length);
+            console.log(difference);
+            */
             log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
             return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
           });

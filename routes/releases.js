@@ -55,11 +55,13 @@ router.get('/:id', function(req, res, next) {
               }
             });
             Object.keys(children).forEach((ticket) => {
-              tmp[ticket].children = [];
-              children[ticket].forEach((child_id) => {
-                tmp[ticket].children.push(tmp[child_id]);
-                delete tmp[child_id];
-              });
+              if (tmp[ticket]) { // we have to check because ticket could be a child and thus already been deleted
+                tmp[ticket].children = [];
+                children[ticket].forEach((child_id) => {
+                  tmp[ticket].children.push(tmp[child_id]);
+                  delete tmp[child_id];
+                });
+              }
             });
             Object.keys(tmp).forEach((ticket) => {
               resultTickets.push(tmp[ticket]);
@@ -67,7 +69,6 @@ router.get('/:id', function(req, res, next) {
             templateVariables.tickets = resultTickets;
             res.render('releases/show', templateVariables);
           })
-
       }
       else {
         var err = new Error('Release not Found');

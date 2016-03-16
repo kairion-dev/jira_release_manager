@@ -23,14 +23,9 @@ html
             li
               a(href="#") Help
           form.navbar-form.navbar-right
-            select.form-control
-              option Kairion
-              option ESC
-              option AMS
-              option Brain
-              option MS Frontend
-              option Controller
-              option xxx
+            select#selectRepo.form-control
+              each rep in repositories
+                option(selected=(selectedRepository == rep), value='#{rep}') #{rep}
 
     .container-fluid
       .row
@@ -46,3 +41,5 @@ html
 
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js')
     script(src='/javascripts/bootstrap.min.js')
+    script(src='/javascripts/js.cookie.js')
+    script(src='/javascripts/common.js')

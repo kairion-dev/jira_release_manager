@@ -2,13 +2,17 @@ var express = require('express');
 var router = express.Router();
 var log = require('../lib/logger.js');
 
-/* GET index page. */
-router.get('/', function(req, res) {
-  var templateVariables = { title: 'Releases' };
+router.get('/', function(req, res, next) {
+
+  var templateVariables = {
+    title: 'Releases',
+    repositories: req.repositories,
+    selectedRepository: req.selectedRepository
+  };
 
   new Promise(
     (resolve, reject) => {
-      req.db.tags.find({}).sort({ tag: -1 }).exec((err, docs) => {
+      req.db.tags.find({ repository: req.selectedRepository }).sort({ tag: -1 }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
@@ -29,7 +33,7 @@ router.get('/', function(req, res) {
 router.get('/:id', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.tags.findOne({ tag: req.params.id }).exec((err, docs) => {
+      req.db.tags.findOne({ tag: req.params.id, repository: req.selectedRepository }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
@@ -39,7 +43,9 @@ router.get('/:id', function(req, res, next) {
         var templateVariables = {
           title: 'Release ' + doc.tag,
           release: doc,
-          tickets: []
+          tickets: [],
+          repositories: req.repositories,
+          selectedRepository: req.selectedRepository
         };
         req.jira
           .getIssues(doc.tickets)
@@ -77,6 +83,7 @@ router.get('/:id', function(req, res, next) {
       }
     })
     .catch((e) => {
+      console.log('new error', e);
       log.error(e);
       res.render('error', {
         message: 'Error while fetching documents: ' + e.message,

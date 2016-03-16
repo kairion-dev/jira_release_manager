@@ -17,54 +17,55 @@ var
 var config = require('node-yaml-config').load('./config/config.yaml');
 if (config.jira && config.jira.oauth && config.jira.oauth.consumer_secret) {
   config.jira.oauth.consumer_secret = fs.readFileSync(process.env['HOME'] + config.jira.oauth.consumer_secret, "utf8");
-  console.log(config.jira);
 }
 
 // load release-manager
 var
   jira = new JiraApi(config.jira, db),
-  git = new Git(config.git, db),
   app = require('./app.js')(db, jira);
 
-git
-  .initialize()
-  .then((tags) => {
-    log.info('Processed all tags.');
-    // Updating ALL known tickets
-    var tickets_to_process = [];
+// "Unable to connect to JIRA during findIssueStatus" if run in parallel, thus we fetch the repository issues in serial
+Promise.mapSeries(Object.keys(config.git), (configId) => {
+  return new Git(config.git[configId], db)
+    .initialize()
+    .then((tags) => {
+      log.info('Processed all tags.');
+      // Updating ALL known tickets
+      var tickets_to_process = [];
 
-    return db.tags.findAsync({})
-      .map((doc) => {
-        return Promise.map(doc.tickets,
-          (ticket) => {
-            if (!ticket.startsWith('KD-0')) {
-              tickets_to_process.push(ticket);
-            }
-          })
-      })
-      .then(() => {
-        return kcommon.uniqueArray(tickets_to_process);
-      })
-      .then((tickets) => {
-        var fetchedIssues = {};
-        return db.tickets.findAsync({})
-          .map((ticket) => {
-            fetchedIssues[ticket.key] = ticket;
-          })
-          .then(() => {
-            /* only for debug purposes - remove after fixed
-            var difference = Object.keys(fetchedIssues).filter((x) => {
-              return tickets.indexOf(x) == -1;
+      return db.tags.findAsync({})
+        .map((doc) => {
+          return Promise.map(doc.tickets,
+            (ticket) => {
+              if (!ticket.startsWith('KD-0')) {
+                tickets_to_process.push(ticket);
+              }
+            })
+        })
+        .then(() => {
+          return kcommon.uniqueArray(tickets_to_process);
+        })
+        .then((tickets) => {
+          var fetchedIssues = {};
+          return db.tickets.findAsync({})
+            .map((ticket) => {
+              fetchedIssues[ticket.key] = ticket;
+            })
+            .then(() => {
+              /* only for debug purposes - remove after fixed
+               var difference = Object.keys(fetchedIssues).filter((x) => {
+               return tickets.indexOf(x) == -1;
+               });
+               console.log(Object.keys(fetchedIssues).sort().length);
+               console.log(tickets.sort().length);
+               console.log(difference);
+               */
+              log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
+              return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
             });
-            console.log(Object.keys(fetchedIssues).sort().length);
-            console.log(tickets.sort().length);
-            console.log(difference);
-            */
-            log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
-            return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
-          });
-      })
-  })
+        })
+    })
+})
   .then(() => {
     log.info('Inital fetch done, starting app');
 
@@ -94,3 +95,4 @@ git
   .catch((e) => {
     log.error('Error processing all tags: ' + e);
   });
+

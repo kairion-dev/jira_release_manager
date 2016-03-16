@@ -1,13 +1,15 @@
 var express = require('express');
+var cookieParser = require('cookie-parser')
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
-var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var config = require('node-yaml-config').load('./config/config.yaml');
 
 var routes = require('./routes/index');
 var releases = require('./routes/releases');
 var open = require('./routes/openBranches');
+
 
 function init(db, jira) {
   var app = express();
@@ -27,6 +29,8 @@ function init(db, jira) {
   app.use(function(req, res, next) {
     req.db = db;
     req.jira = jira;
+    req.repositories = Object.keys(config.git);
+    req.selectedRepository = req.cookies.selectedRepository || req.repositories[0];
     next();
   });
 

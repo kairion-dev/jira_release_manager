@@ -39,14 +39,14 @@ router.get('/:id', function(req, res, next) {
       });
     })
     .then((doc) => {
+      var templateVariables = {
+        title: 'Release ' + req.params.id,
+        tickets: [],
+        repositories: req.repositories,
+        selectedRepository: req.selectedRepository
+      };
       if (doc) {
-        var templateVariables = {
-          title: 'Release ' + doc.tag,
-          release: doc,
-          tickets: [],
-          repositories: req.repositories,
-          selectedRepository: req.selectedRepository
-        };
+        templateVariables.release = doc;
         req.jira
           .getIssues(doc.tickets)
           .then((tickets) => {
@@ -77,13 +77,10 @@ router.get('/:id', function(req, res, next) {
           })
       }
       else {
-        var err = new Error('Release not Found');
-        err.status = 404;
-        next(err);
+        res.render('releases/notFound', templateVariables);
       }
     })
     .catch((e) => {
-      console.log('new error', e);
       log.error(e);
       res.render('error', {
         message: 'Error while fetching documents: ' + e.message,

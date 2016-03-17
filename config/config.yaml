@@ -12,5 +12,9 @@ default:
 #      access_token: 'VnBpdujgzdSHtJnTOXSY6xfqml2Y6NZg'
 #      access_token_secret: 'nhclzMeidDRZiAOeVyIa0BI5CtAe3Kk2'
   git:
-    git_path: 'directory_to_git_branch - check config/config.yaml'
-    git_name: 'name_of_the_branch - check config/config.yaml'
+    brain:
+      path: '/home/mwick/kairion/brain.git'
+      name: 'brain'
+    esc:
+      path: '/home/mwick/kairion/esc.git'
+      name: 'esc'

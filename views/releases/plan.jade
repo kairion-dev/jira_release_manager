@@ -1,0 +1,28 @@
+extends ../layout
+
+mixin tickets(subtitle, tickets)
+    b= subtitle
+    ul
+        each ticket in tickets
+            li
+                a(href='https://kairion.atlassian.net/browse/' + ticket.key)= ticket.key
+                span  - #{ticket.summary}
+
+mixin repoTickets(repo, tickets)
+    .panel.panel-default
+        .panel-heading Repository: #{repo}&nbsp;
+            a(href='/releases/repo/' + repo + '/' + tag) (Details)
+        .panel-body
+            +tickets('Features', tickets.features)
+            +tickets('Bugfixes', tickets.bugfixes)
+
+
+block content
+    //ol.breadcrumb
+    //    li
+    //        a(href="#") Release Plans
+    //    li.active 12.05.05
+    h1.page-header= title
+    .well Test
+    each doc in docs
+        +repoTickets(doc.repo, doc.tickets)

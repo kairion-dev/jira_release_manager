@@ -1,0 +1,20 @@
+extends ../layout
+
+block content
+    .modal-dialog
+        .modal-content
+            .modal-header
+                .modal-title Ich bin ein Modal
+            .modal-body
+                p lustiger Text irgendwo in diesem Modal
+    .dropdown
+        button(id="drop1", type="button", data-toggle="dropdown" aria-haspopup="true", aria-expanded="false").dropdown-toggle.btn.btn-primary Toggle Me...
+            span.caret
+        ul.dropdown-menu(aria-labelledby="drop1", id="menu1")
+            li
+                a(href='#') Whatever
+            li
+                a(href='/releases/16.01.2') 123456
+            li.divider
+            li
+                a(href="#") xxxxyy

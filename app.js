@@ -29,8 +29,16 @@ function init(db, jira) {
   app.use(function(req, res, next) {
     req.db = db;
     req.jira = jira;
-    req.repositories = Object.keys(config.git);
-    req.selectedRepository = req.cookies.selectedRepository || req.repositories[0];
+    res.locals.repositories = {
+      all: Object.keys(config.git),
+      selected: req.cookies.selectedRepository || config.git[0]
+    };
+    res.locals.menuItems = [
+      { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected },
+      { id: 'menu-releases-plan', name: 'Release Plans', href: '/releases/plan' },
+      { id: 'menu-open', name: 'Open Branches', href: '/open' },
+      { id: 'menu-releases-test', name: 'Testpage', href: '/releases/test' }
+    ];
     next();
   });
 

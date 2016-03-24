@@ -24,17 +24,20 @@ html
               a(href="#") Help
           form.navbar-form.navbar-right
             select#selectRepo.form-control
-              each rep in repositories
-                option(selected=(selectedRepository == rep), value='#{rep}') #{rep}
+              each rep in repositories.all
+                option(selected=(repositories.selected == rep), value='#{rep}') #{rep}
 
     .container-fluid
       .row
         .col-sm-3.col-md-2.sidebar
           ul.nav.nav-sidebar
-            li.active
-              a(href='/releases') Releases
-            li
-              a(href='/open') Open Branches
+            each item in menuItems
+              if item.id == menuSelected
+                li(id= item.id).active
+                  a(href= item.href)= item.name
+              else
+                li(id= item.id)
+                  a(href= item.href)= item.name
 
         .col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
           block content

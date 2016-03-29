@@ -34,9 +34,6 @@ router.get('/repo/:repo', function(req, res, next) {
 
 
 router.get('/plan', function(req, res, next) {
-
-  console.log(res.locals.repositories);
-
   var templateVars = {
     title: 'Release Plans',
     targetPath: 'plan/',
@@ -116,6 +113,59 @@ router.get('/plan', function(req, res, next) {
 });
 
 
+router.get('/plan/:tag/:repo/:type/add', function(req, res, next) {
+  var templateVars = {
+    title: 'Add ...',
+    menuSelected: 'menu-releases-plan',
+    hiddenFields: { tag: req.params.tag, repo: req.params.repo, type: req.params.type },
+    formTarget: '/releases/plan/add/status'
+  };
+  res.render('releases/plan-add-status', templateVars);
+});
+
+
+router.post('/plan/add/status', function(req, res, next) {
+  new Promise((resolve, reject) => {
+    var id = new Date().getTime();
+    var element = { ['release.' + req.body.type]: { id: id, status: req.body.status, date: req.body.date, author: req.body.author }};
+    console.log(element);
+    req.db.tags.update({ tag: req.body.tag, repository: req.body.repo }, { $push: element }, {}, (err, numUpdated) => {
+      if (err) reject(err);
+      else resolve(element)
+    })
+  })
+  .then((element) => {
+    res.redirect('/releases/plan/' + req.body.tag);
+  })
+  .catch((e) => {
+    res.render('error', {
+      message: 'Error while updating release status',
+      error: e
+    });
+  })
+});
+
+
+router.get('/plan/:tag/:repo/:type/remove/:id', function(req, res, next) {
+  new Promise((resolve, reject) => {
+    var element = { ['release.' + req.params.type]: { id: parseInt(req.params.id) }};
+    req.db.tags.update({ tag: req.params.tag, repository: req.params.repo }, { $pull: element }, {}, (err, numUpdated) => {
+      if (err) reject(err);
+      else resolve(element);
+    })
+  })
+  .then((element) => {
+    res.redirect('/releases/plan/' + req.params.tag);
+  })
+  .catch((e) => {
+    res.render('error', {
+      message: 'Error while updating release status',
+      error: e
+    });
+  })
+});
+
+
 router.get('/plan/:id', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
@@ -131,7 +181,7 @@ router.get('/plan/:id', function(req, res, next) {
           .then(req.jira.linkChildren)
           .then((tickets) => {
             tickets = tickets
-              .filter((ticket) => { return !ticket.key.startsWith(ticket.project + '-0'); })
+              //.filter((ticket) => { return !ticket.key.startsWith(ticket.project + '-0'); })
               .sort((a,b) => { return a.key < b.key });
             tickets = tickets.reduce(
               (current, ticket) => {
@@ -142,7 +192,7 @@ router.get('/plan/:id', function(req, res, next) {
                 }
                 return current;
               }, { features: [], bugfixes: [] });
-            return { repo: doc.repository, tickets: tickets };
+            return { repo: doc.repository, tickets: tickets, release: doc.release };
           })
       });
     })

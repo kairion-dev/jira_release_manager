@@ -16,6 +16,29 @@ mixin repoTickets(repo, tickets)
             +tickets('Features', tickets.features)
             +tickets('Bugfixes', tickets.bugfixes)
 
+mixin status(type, repo, elements)
+    if  elements.length == 0
+        div No entry
+            a(href=tag + '/' + repo + '/' + type + '/add').btn.btn-default.btn-xs
+                span(aria-hidden="true").glyphicon.glyphicon-plus
+    else
+        each el, index in elements
+            div #{el.status} #{el.date} #{el.author} #{el.id}
+                a(href=tag +'/'+ repo +'/'+ type +'/remove/'+ el.id).btn.btn-default.btn-xs
+                    span(aria-hidden="true").glyphicon.glyphicon-remove
+                if index == 0
+                    a(href=tag + '/' + repo + '/' + type + '/add').btn.btn-default.btn-xs
+                        span(aria-hidden="true").glyphicon.glyphicon-plus
+
+mixin releaseStatus(docs)
+    .well
+        each doc in docs
+            .status.row
+                .col-xs-1= doc.repo
+                .col-xs-4
+                    +status('testing', doc.repo, doc.release.testing)
+                .col-xs-4
+                    +status('deploy', doc.repo, doc.release.deploy)
 
 block content
     //ol.breadcrumb
@@ -23,6 +46,6 @@ block content
     //        a(href="#") Release Plans
     //    li.active 12.05.05
     h1.page-header= title
-    .well Test
+    +releaseStatus(docs)
     each doc in docs
         +repoTickets(doc.repo, doc.tickets)

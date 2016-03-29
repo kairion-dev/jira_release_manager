@@ -1,0 +1,25 @@
+extends ../layout
+
+block content
+	h1.page-header= title
+	p= hiddenFields.repo
+	form(action=formTarget method="post")#add-status
+		input(type="hidden", name="repo", value=hiddenFields.repo)#repo
+		input(type="hidden", name="tag", value=hiddenFields.tag)#tag
+		input(type="hidden", name="type", value=hiddenFields.type)#type
+		.form-group
+			label(for="status") Status
+			select(name="status").form-control#status
+				option Works
+				option Inactive
+				option Fails
+		.form-group
+			label(for="date") Date
+			.input-group#datetimepicker
+				input(type="text", name="date").form-control
+				span.input-group-addon
+					span.glyphicon.glyphicon-calendar
+		.form-group
+			label(for="author") Author
+			input(type="text", name="author").form-control#author
+		button(type="submit").btn.btn-default Submit

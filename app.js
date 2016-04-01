@@ -35,7 +35,7 @@ function init(db, jira) {
       selected: req.cookies.selectedRepository || config.git[0]
     };
     res.locals.menuItems = [
-      { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected },
+      // { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected }, // we don't want 'releases' right now
       { id: 'menu-releases-plan', name: 'Release Plans', href: '/releases/plan' },
       { id: 'menu-open', name: 'Open Branches', href: '/open' },
       { id: 'menu-releases-test', name: 'Testpage', href: '/releases/test' }

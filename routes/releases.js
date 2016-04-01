@@ -180,9 +180,6 @@ router.get('/plan/:id', function(req, res, next) {
           .getIssues(doc.tickets)
           .then(req.jira.linkChildren)
           .then((tickets) => {
-            tickets = tickets
-              //.filter((ticket) => { return !ticket.key.startsWith(ticket.project + '-0'); })
-              .sort((a,b) => { return a.key < b.key });
             tickets = tickets.reduce(
               (current, ticket) => {
                 if (ticket.issueType == 'Bug') {
@@ -192,15 +189,24 @@ router.get('/plan/:id', function(req, res, next) {
                 }
                 return current;
               }, { features: [], bugfixes: [] });
+            tickets.features.sort((a,b) => { return a.key < b.key });
+            tickets.bugfixes.sort((a,b) => { return a.key < b.key });
             return { repo: doc.repository, tickets: tickets, release: doc.release };
           })
       });
     })
     .then((releases) => {
+      var statusClasses = {
+        'Default': 'label label-default',
+        'Works': 'label label-success',
+        'Inactive': 'label label-warning',
+        'Fails': 'label label-danger'
+      };
       var templateVars = {
         title: 'Release Plan ' + req.params.id,
         docs: releases,
         tag: req.params.id,
+        statusClasses: statusClasses,
         menuSelected: 'menu-releases-plan'
       };
       res.render('releases/plan', templateVars);
@@ -275,6 +281,5 @@ router.get('/repo/:repo/:id', function(req, res, next) {
       });
     });
 });
-
 
 module.exports = router;

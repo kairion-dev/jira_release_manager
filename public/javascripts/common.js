@@ -22,3 +22,7 @@ $(function() {
     locale: 'de'
   });
 });
+
+$(function() {
+  $('[data-tootle="tooltip"]').tooltip();
+});

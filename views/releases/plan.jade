@@ -18,16 +18,18 @@ mixin repoTickets(repo, tickets)
 
 mixin status(type, repo, elements)
     if  elements.length == 0
-        div No entry
-            a(href=tag + '/' + repo + '/' + type + '/add').btn.btn-default.btn-xs
+        div
+            span(class="#{statusClasses['Default']}") No entry yet
+            a(href=tag + '/' + repo + '/' + type + '/add', data-toogle="tooltip", title="Add status").btn.btn-default.btn-xs
                 span(aria-hidden="true").glyphicon.glyphicon-plus
     else
         each el, index in elements
-            div #{el.status} #{el.date} #{el.author} #{el.id}
-                a(href=tag +'/'+ repo +'/'+ type +'/remove/'+ el.id).btn.btn-default.btn-xs
+            div
+                span(data-toogle="tooltip", title="#{el.status}" class="#{statusClasses[el.status]}") #{el.date} #{el.author}
+                a(href=tag +'/'+ repo +'/'+ type +'/remove/'+ el.id, data-toogle="tooltip", title="Remove status").btn.btn-default.btn-xs
                     span(aria-hidden="true").glyphicon.glyphicon-remove
                 if index == 0
-                    a(href=tag + '/' + repo + '/' + type + '/add').btn.btn-default.btn-xs
+                    a(href=tag + '/' + repo + '/' + type + '/add', data-toogle="tooltip", title="Add status").btn.btn-default.btn-xs
                         span(aria-hidden="true").glyphicon.glyphicon-plus
 
 mixin releaseStatus(docs)

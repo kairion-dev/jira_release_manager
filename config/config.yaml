@@ -12,9 +12,11 @@ default:
 #      access_token: 'VnBpdujgzdSHtJnTOXSY6xfqml2Y6NZg'
 #      access_token_secret: 'nhclzMeidDRZiAOeVyIa0BI5CtAe3Kk2'
   git:
-    brain:
-      path: '/home/mwick/kairion/brain.git'
-      name: 'brain'
-    esc:
-      path: '/home/mwick/kairion/esc.git'
-      name: 'esc'
+    featurePrefix: 'refs/heads/feature/'
+    repositories:
+      brain:
+        path: '/home/mwick/kairion/brain.git'
+        name: 'brain'
+      esc:
+        path: '/home/mwick/kairion/esc.git'
+        name: 'esc'

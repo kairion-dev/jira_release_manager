@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+    h1.page-header= title
+
+    .table-responsive
+        table.table.table-striped
+            thead
+                tr
+                    th Branches
+                    th Commits
+                    th Tickets
+                    th Date
+            tbody
+                each branch in branches
+                    tr
+                        td
+                            a(href= 'openBranches/' + branch.tag)=branch.tag 
+                        td= branch.commits
+                        td= branch.tickets.length
+                        td= branch.last_commit_date

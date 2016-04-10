@@ -1,53 +1,9 @@
 extends ../layout
-
-mixin tickets(subtitle, tickets)
-    b= subtitle
-    ul
-        each ticket in tickets
-            li
-                a(href='https://kairion.atlassian.net/browse/' + ticket.key)= ticket.key
-                span  - #{ticket.summary}
-
-mixin repoTickets(repo, tickets)
-    .panel.panel-default
-        .panel-heading Repository: #{repo}&nbsp;
-            a(href='/releases/repo/' + repo + '/' + tag) (Details)
-        .panel-body
-            +tickets('Features', tickets.features)
-            +tickets('Bugfixes', tickets.bugfixes)
-
-mixin status(type, repo, elements)
-    if  elements.length == 0
-        div
-            span(class="#{statusClasses['Default']}") No entry yet
-            a(href=tag + '/' + repo + '/' + type + '/add', data-toogle="tooltip", title="Add status").btn.btn-default.btn-xs
-                span(aria-hidden="true").glyphicon.glyphicon-plus
-    else
-        each el, index in elements
-            div
-                span(data-toogle="tooltip", title="#{el.status}" class="#{statusClasses[el.status]}") #{el.date} #{el.author}
-                a(href=tag +'/'+ repo +'/'+ type +'/remove/'+ el.id, data-toogle="tooltip", title="Remove status").btn.btn-default.btn-xs
-                    span(aria-hidden="true").glyphicon.glyphicon-remove
-                if index == 0
-                    a(href=tag + '/' + repo + '/' + type + '/add', data-toogle="tooltip", title="Add status").btn.btn-default.btn-xs
-                        span(aria-hidden="true").glyphicon.glyphicon-plus
-
-mixin releaseStatus(docs)
-    .well
-        each doc in docs
-            .status.row
-                .col-xs-1= doc.repo
-                .col-xs-4
-                    +status('testing', doc.repo, doc.release.testing)
-                .col-xs-4
-                    +status('deploy', doc.repo, doc.release.deploy)
+include ../mixins/ticket-helper
+include ../mixins/release-status-helper
 
 block content
-    //ol.breadcrumb
-    //    li
-    //        a(href="#") Release Plans
-    //    li.active 12.05.05
     h1.page-header= title
     +releaseStatus(docs)
     each doc in docs
-        +repoTickets(doc.repo, doc.tickets)
+        +repoTickets('/releases/repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets)

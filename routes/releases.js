@@ -64,40 +64,6 @@ router.get('/plan', function(req, res, next) {
           return releases;
         }, {})
       );
-
-      //return Promise.reduce(docs, (releases, doc, i, total) => {
-      //  var tag = doc.tag;
-      //  if (!(tag in releases)) {
-      //    releases[tag] = { tag: tag, commits: 0, tickets: [], last_commit_date: -1 };
-      //  }
-      //  // aggregate release data
-      //  releases[tag].commits = releases[tag].commits + doc.commits;
-      //  releases[tag].tickets = releases[tag].tickets.concat(doc.tickets);
-      //  // set date to the latest commit within all repositories
-      //  if (new Date(doc.last_commit_date) > new Date(releases[tag].last_commit_date)) {
-      //    releases[tag].last_commit_date = doc.last_commit_date;
-      //  }
-      //  return releases;
-      //});
-
-      //var releases = {};
-      //return Promise.each(docs,
-      //  (doc, i, total) => {
-      //    var tag = doc.tag;
-      //    if (!(tag in releases)) {
-      //      releases[tag] = { tag: tag, commits: 0, tickets: [], last_commit_date: -1 };
-      //    }
-      //    // aggregate release data
-      //    releases[tag].commits = releases[tag].commits + doc.commits;
-      //    releases[tag].tickets = releases[tag].tickets.concat(doc.tickets);
-      //    // set date to the latest commit within all repositories
-      //    if (new Date(doc.last_commit_date) > new Date(releases[tag].last_commit_date)) {
-      //      releases[tag].last_commit_date = doc.last_commit_date;
-      //    }
-      //  })
-      //  .then(() => {
-      //    return releases;
-      //  })
     })
     .then((releases) => {
       templateVars.releases = releases;
@@ -128,7 +94,6 @@ router.post('/plan/add/status', function(req, res, next) {
   new Promise((resolve, reject) => {
     var id = new Date().getTime();
     var element = { ['release.' + req.body.type]: { id: id, status: req.body.status, date: req.body.date, author: req.body.author }};
-    console.log(element);
     req.db.tags.update({ tag: req.body.tag, repository: req.body.repo }, { $push: element }, {}, (err, numUpdated) => {
       if (err) reject(err);
       else resolve(element)
@@ -166,10 +131,10 @@ router.get('/plan/:tag/:repo/:type/remove/:id', function(req, res, next) {
 });
 
 
-router.get('/plan/:id', function(req, res, next) {
+router.get('/plan/:tag', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.tags.find({ tag: req.params.id }).exec((err, docs) => {
+      req.db.tags.find({ tag: req.params.tag }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       })
@@ -203,9 +168,9 @@ router.get('/plan/:id', function(req, res, next) {
         'Fails': 'label label-danger'
       };
       var templateVars = {
-        title: 'Release Plan ' + req.params.id,
+        title: 'Release Plan ' + req.params.tag,
         docs: releases,
-        tag: req.params.id,
+        tag: req.params.tag,
         statusClasses: statusClasses,
         menuSelected: 'menu-releases-plan'
       };
@@ -219,6 +184,7 @@ router.get('/plan/:id', function(req, res, next) {
       });
     })
 });
+
 
 router.get('/test/:id?', function(req, res, next) {
   new Promise(
@@ -257,7 +223,7 @@ router.get('/repo/:repo/:id', function(req, res, next) {
       var templateVariables = {
         title: 'Release ' + req.params.id,
         tickets: [],
-        menuSelected: 'menu-releases-repo'
+        menuSelected: 'menu-releases-plan'
       };
       if (doc) {
         templateVariables.release = doc;

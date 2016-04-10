@@ -15,7 +15,10 @@ block content
                 each release in releases
                     tr
                         td
-                            a(href= targetPath + release.tag)=release.tag
+                            if release.tag == 'master'
+                                a(href= targetPath + release.tag) Next Release
+                            else
+                                a(href= targetPath + release.tag)=release.tag 
                         td= release.commits
                         td= release.tickets.length
                         td= release.last_commit_date

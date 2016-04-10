@@ -4,14 +4,13 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-var config = require('node-yaml-config').load('./config/config.yaml');
 
 var routes = require('./routes/index');
 var releases = require('./routes/releases');
-var open = require('./routes/openBranches');
+var openBranches = require('./routes/openBranches');
 
 
-function init(db, jira) {
+function init(db, jira, config) {
   var app = express();
 
 // view engine setup
@@ -31,21 +30,20 @@ function init(db, jira) {
     req.db = db;
     req.jira = jira;
     res.locals.repositories = {
-      all: Object.keys(config.git),
-      selected: req.cookies.selectedRepository || config.git[0]
+      all: Object.keys(config.git.repositories),
+      selected: req.cookies.selectedRepository || config.git.repositories[0]
     };
     res.locals.menuItems = [
       // { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected }, // we don't want 'releases' right now
       { id: 'menu-releases-plan', name: 'Release Plans', href: '/releases/plan' },
-      { id: 'menu-open', name: 'Open Branches', href: '/open' },
-      { id: 'menu-releases-test', name: 'Testpage', href: '/releases/test' }
+      { id: 'menu-open-branches', name: 'Open Branches', href: '/openBranches' }
     ];
     next();
   });
 
   app.use('/', routes);
   app.use('/releases', releases);
-  app.use('/open', open);
+  app.use('/openBranches', openBranches);
 
 // catch 404 and forward to error handler
   app.use(function(req, res, next) {

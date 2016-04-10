@@ -1,0 +1,17 @@
+//- Show a single ticket
+mixin tickets(subtitle, tickets)
+    b= subtitle
+    ul
+        each ticket in tickets
+            li
+                a(href='https://kairion.atlassian.net/browse/' + ticket.key)= ticket.key
+                span  - #{ticket.summary}
+
+//- Show all related tickets
+mixin repoTickets(targetRepository, repo, tickets)
+    .panel.panel-default
+        .panel-heading Repository: #{repo}&nbsp;
+            a(href=targetRepository) (Details)
+        .panel-body
+            +tickets('Features', tickets.features)
+            +tickets('Bugfixes', tickets.bugfixes)

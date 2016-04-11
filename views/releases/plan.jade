@@ -7,3 +7,8 @@ block content
     +releaseStatus(docs)
     each doc in docs
         +repoTickets('/releases/repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets)
+
+block scripts
+    script(src='/bower_components/moment/min/moment.min.js')
+    script(src='/bower_components/moment/locale/de.js')
+    script(src='/bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js')

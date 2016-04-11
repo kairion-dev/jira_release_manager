@@ -18,11 +18,11 @@
 })();
 
 $(function() {
-  $('#datetimepicker').datetimepicker({
+  $('.datetimepicker').datetimepicker({
     locale: 'de'
   });
 });
 
 $(function() {
-  $('[data-tootle="tooltip"]').tooltip();
+  $('[data-toggle="tooltip"]').tooltip();
 });

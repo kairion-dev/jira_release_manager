@@ -79,17 +79,6 @@ router.get('/plan', function(req, res, next) {
 });
 
 
-router.get('/plan/:tag/:repo/:type/add', function(req, res, next) {
-  var templateVars = {
-    title: 'Add ...',
-    menuSelected: 'menu-releases-plan',
-    hiddenFields: { tag: req.params.tag, repo: req.params.repo, type: req.params.type },
-    formTarget: '/releases/plan/add/status'
-  };
-  res.render('releases/plan-add-status', templateVars);
-});
-
-
 router.post('/plan/add/status', function(req, res, next) {
   new Promise((resolve, reject) => {
     var id = new Date().getTime();
@@ -185,31 +174,6 @@ router.get('/plan/:tag', function(req, res, next) {
     })
 });
 
-
-router.get('/test/:id?', function(req, res, next) {
-  new Promise(
-    (resolve, reject) => {
-      req.db.tags.find({ tag: req.params.id}).exec((err, docs) => {
-        if (err) reject(err);
-        else resolve(docs);
-      })
-    })
-    .then((docs) => {
-      console.log(docs);
-      var templateVars = {
-        title: 'Testpage',
-        menuSelected: 'menu-releases-test'
-      };
-      res.render('releases/test', templateVars);
-    })
-    .catch((e) => {
-      log.error(e);
-      res.render('error', {
-        message: 'Error while fetching documents: ' + e.message,
-        error: e
-      });
-    })
-});
 
 router.get('/repo/:repo/:id', function(req, res, next) {
   new Promise(

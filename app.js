@@ -29,10 +29,6 @@ function init(db, jira, config) {
   app.use(function(req, res, next) {
     req.db = db;
     req.jira = jira;
-    res.locals.repositories = {
-      all: Object.keys(config.git.repositories),
-      selected: req.cookies.selectedRepository || config.git.repositories[0]
-    };
     res.locals.menuItems = [
       // { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected }, // we don't want 'releases' right now
       { id: 'menu-releases-plan', name: 'Release Plans', href: '/releases/plan' },

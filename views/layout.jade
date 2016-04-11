@@ -25,10 +25,6 @@ html
           ul.nav.navbar-nav.navbar-right
             li
               a(href="#") Help
-          form.navbar-form.navbar-right
-            select#selectRepo.form-control
-              each rep in repositories.all
-                option(selected=(repositories.selected == rep), value='#{rep}') #{rep}
 
     .container-fluid
       .row

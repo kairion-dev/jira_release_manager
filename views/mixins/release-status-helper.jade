@@ -8,10 +8,9 @@ mixin modalAddStatus(modalId, formTarget, hiddenValues)
                 .modal-header
                     button(type="button", data-dismiss="modal", aria-label="Close").close
                         span(aria-hidden="true").glyphicon.glyphicon-remove
-                    p Add new status
-                    p #{hiddenValues.repo} #{hiddenValues.tag} #{hiddenValues.type}
-                .modal-body
-                    form(action=formTarget method="post")#add-status
+                    h4.modal-title Add Status for #{hiddenValues.repo} #{hiddenValues.tag} #{hiddenValues.type}
+                form(action=formTarget method="post")#add-status
+                    .modal-body
                         input(type="hidden", name="repo", value=hiddenValues.repo)#repo
                         input(type="hidden", name="tag", value=hiddenValues.tag)#tag
                         input(type="hidden", name="type", value=hiddenValues.type)#type
@@ -30,7 +29,9 @@ mixin modalAddStatus(modalId, formTarget, hiddenValues)
                         .form-group
                             label(for="author") Author
                             input(type="text", name="author").form-control#author
-                        button(type="submit").btn.btn-default Submit
+                    .modal-footer
+                        button(type="submit").btn.btn-primary Save
+                        button(data-dismiss="modal").btn.btn-default Cancel
 
 //- Show a single status (inside the status box)
 mixin status(type, repo, elements)

@@ -60,7 +60,11 @@ router.get('/repo/:repo/:id', function(req, res, next) {
       var templateVariables = {
         title: 'Branch ' + req.params.id,
         tickets: [],
-        menuSelected: 'menu-open-branches'
+        menuSelected: 'menu-open-branches',
+        breadcrumbs: [
+          { link: '/openBranches', title: 'Open Branches' },
+          { link: '/openBranches/' + req.params.id, title: 'Open Branch ' + req.params.id }
+        ]
       };
       if (doc) {
         templateVariables.release = doc;
@@ -119,7 +123,10 @@ router.get('/:branch', function(req, res, next) {
         title: 'Open branch ' + req.params.branch,
         docs: releases,
         tag: req.params.branch,
-        menuSelected: 'menu-open-branches'
+        menuSelected: 'menu-open-branches',
+        breadcrumbs: [
+          { link: '/openBranches', title: 'Open Branches' }
+        ]
       };
       res.render('openBranches/show', templateVars);
     })

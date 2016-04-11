@@ -1,3 +1,5 @@
+include mixins/breadcrumb-helper
+
 doctype html
 html
   head
@@ -41,6 +43,7 @@ html
                   a(href= item.href)= item.name
 
         .col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+          +breadcrumb(breadcrumbs)
           block content
 
     script(src='https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js')

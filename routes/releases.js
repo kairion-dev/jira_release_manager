@@ -161,7 +161,10 @@ router.get('/plan/:tag', function(req, res, next) {
         docs: releases,
         tag: req.params.tag,
         statusClasses: statusClasses,
-        menuSelected: 'menu-releases-plan'
+        menuSelected: 'menu-releases-plan',
+        breadcrumbs: [
+          { link: '/releases/plan', title: 'Release Plans' }
+        ]
       };
       res.render('releases/plan', templateVars);
     })
@@ -187,7 +190,11 @@ router.get('/repo/:repo/:id', function(req, res, next) {
       var templateVariables = {
         title: 'Release ' + req.params.id,
         tickets: [],
-        menuSelected: 'menu-releases-plan'
+        menuSelected: 'menu-releases-plan',
+        breadcrumbs: [
+          { link: '/releases/plan', title: 'Release Plans' },
+          { link: '/releases/plan/' + req.params.id, title: 'Release Plan ' + req.params.id }
+        ]
       };
       if (doc) {
         templateVariables.release = doc;

@@ -10,8 +10,7 @@ var
   fs = require('fs'),
   db = {
     tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
-    tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true })),
-    openBranches: Promise.promisifyAll(new Datastore({ filename: './openBranches', autoload: true })),
+    tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
   };
 
 // load configs
@@ -34,68 +33,36 @@ Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {
   };
   var git = new Git(options, db);
 
-  return Promise.all([
-    git.initOpenBranches()
-      .then((tags) => {
-        log.info('Processed all tags.');
-        // Updating ALL known tickets
-        var tickets_to_process = [];
+  return git.initialize()
+    .then((tags) => {
+      log.info('Processed all tags.');
+      // Updating ALL known tickets
+      var tickets_to_process = [];
 
-        return db.openBranches.findAsync({})
-          .map((doc) => {
-            return Promise.map(doc.tickets,
-              (ticket) => {
-                if (!ticket.startsWith('KD-0')) {
-                  tickets_to_process.push(ticket);
-                }
-              })
-          })
-          .then(() => {
-            return kcommon.uniqueArray(tickets_to_process);
-          })
-          .then((tickets) => {
-            var fetchedIssues = {};
-            return db.tickets.findAsync({})
-              .map((ticket) => {
-                fetchedIssues[ticket.key] = ticket;
-              })
-              .then(() => {
-                log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
-                return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
-              });
-          })
-      }),
-    git.initTags()
-      .then((tags) => {
-        log.info('Processed all tags.');
-        // Updating ALL known tickets
-        var tickets_to_process = [];
-
-        return db.tags.findAsync({})
-          .map((doc) => {
-            return Promise.map(doc.tickets,
-              (ticket) => {
-                if (!ticket.startsWith('KD-0')) {
-                  tickets_to_process.push(ticket);
-                }
-              })
-          })
-          .then(() => {
-            return kcommon.uniqueArray(tickets_to_process);
-          })
-          .then((tickets) => {
-            var fetchedIssues = {};
-            return db.tickets.findAsync({})
-              .map((ticket) => {
-                fetchedIssues[ticket.key] = ticket;
-              })
-              .then(() => {
-                log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
-                return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
-              });
-          })
-      })
-  ]);
+      return db.tags.findAsync({})
+        .map((doc) => {
+          return Promise.map(doc.tickets,
+            (ticket) => {
+              if (!ticket.startsWith('KD-0')) {
+                tickets_to_process.push(ticket);
+              }
+            })
+        })
+        .then(() => {
+          return kcommon.uniqueArray(tickets_to_process);
+        })
+        .then((tickets) => {
+          var fetchedIssues = {};
+          return db.tickets.findAsync({})
+            .map((ticket) => {
+              fetchedIssues[ticket.key] = ticket;
+            })
+            .then(() => {
+              log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
+              return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
+            });
+        })
+    })
 })
   .then(() => {
     log.info('Inital fetch done, starting app');

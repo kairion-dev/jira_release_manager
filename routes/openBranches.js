@@ -12,15 +12,15 @@ router.get('/', function(req, res, next) {
 
   new Promise(
     (resolve, reject) => {
-      req.db.openBranches.find({ }).sort({ branch: -1 }).exec((err, docs) => {
+      req.db.tags.find({ type: 'branch' }).sort({ tag: -1 }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
     })
     .then((docs) => {
-      return Promise.resolve(docs.reduce( // http://bluebirdjs.com/docs/api/promise.reduce.html
+      return Promise.resolve(docs.reduce(
         (branches, doc, i, total) => {
-          var branch = doc.branch;
+          var branch = doc.tag;
           if (!(branch in branches)) {
             branches[branch] = { tag: branch, commits: 0, tickets: [], last_commit_date: -1 };
           }
@@ -51,7 +51,7 @@ router.get('/', function(req, res, next) {
 router.get('/repo/:repo/:id', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.openBranches.findOne({ branch: req.params.id, repository: req.params.repo }).exec((err, docs) => {
+      req.db.tags.findOne({ type: 'branch', tag: req.params.id, repository: req.params.repo }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
@@ -92,7 +92,7 @@ router.get('/repo/:repo/:id', function(req, res, next) {
 router.get('/:branch', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.openBranches.find({ branch: req.params.branch }).exec((err, docs) => {
+      req.db.tags.find({ type: 'branch', tag: req.params.branch }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       })

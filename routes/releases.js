@@ -14,7 +14,7 @@ router.get('/repo/:repo', function(req, res, next) {
 
   new Promise(
     (resolve, reject) => {
-      req.db.tags.find({ repository: req.params.repo }).sort({ tag: -1 }).exec((err, docs) => {
+      req.db.tags.find({ type: 'release', repository: req.params.repo }).sort({ tag: -1 }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
@@ -42,7 +42,7 @@ router.get('/plan', function(req, res, next) {
 
   new Promise(
     (resolve, reject) => {
-      req.db.tags.find({ }).sort({ tag: -1 }).exec((err, docs) => {
+      req.db.tags.find({ type: 'release' }).sort({ tag: -1 }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });
@@ -83,7 +83,7 @@ router.post('/plan/add/status', function(req, res, next) {
   new Promise((resolve, reject) => {
     var id = new Date().getTime();
     var element = { ['release.' + req.body.type]: { id: id, status: req.body.status, date: req.body.date, author: req.body.author }};
-    req.db.tags.update({ tag: req.body.tag, repository: req.body.repo }, { $push: element }, {}, (err, numUpdated) => {
+    req.db.tags.update({ type: 'release', tag: req.body.tag, repository: req.body.repo }, { $push: element }, {}, (err, numUpdated) => {
       if (err) reject(err);
       else resolve(element)
     })
@@ -103,7 +103,7 @@ router.post('/plan/add/status', function(req, res, next) {
 router.get('/plan/:tag/:repo/:type/remove/:id', function(req, res, next) {
   new Promise((resolve, reject) => {
     var element = { ['release.' + req.params.type]: { id: parseInt(req.params.id) }};
-    req.db.tags.update({ tag: req.params.tag, repository: req.params.repo }, { $pull: element }, {}, (err, numUpdated) => {
+    req.db.tags.update({ type: 'release', tag: req.params.tag, repository: req.params.repo }, { $pull: element }, {}, (err, numUpdated) => {
       if (err) reject(err);
       else resolve(element);
     })
@@ -123,7 +123,7 @@ router.get('/plan/:tag/:repo/:type/remove/:id', function(req, res, next) {
 router.get('/plan/:tag', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.tags.find({ tag: req.params.tag }).exec((err, docs) => {
+      req.db.tags.find({ type: 'release', tag: req.params.tag }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       })
@@ -181,7 +181,7 @@ router.get('/plan/:tag', function(req, res, next) {
 router.get('/repo/:repo/:id', function(req, res, next) {
   new Promise(
     (resolve, reject) => {
-      req.db.tags.findOne({ tag: req.params.id, repository: req.params.repo }).exec((err, docs) => {
+      req.db.tags.findOne({ type: 'release', tag: req.params.id, repository: req.params.repo }).exec((err, docs) => {
         if (err) reject(err);
         else resolve(docs);
       });

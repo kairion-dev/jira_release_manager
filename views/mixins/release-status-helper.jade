@@ -8,7 +8,7 @@ mixin modalAddStatus(modalId, formTarget, hiddenValues)
                 .modal-header
                     button(type="button", data-dismiss="modal", aria-label="Close").close
                         span(aria-hidden="true").glyphicon.glyphicon-remove
-                    h4.modal-title Add Status for #{hiddenValues.repo} #{hiddenValues.tag} #{hiddenValues.type}
+                    h4.modal-title Add Status for '#{hiddenValues.repo} #{hiddenValues.tag} #{hiddenValues.type}'
                 form(action=formTarget method="post")#add-status
                     .modal-body
                         input(type="hidden", name="repo", value=hiddenValues.repo)#repo

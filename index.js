@@ -1,28 +1,20 @@
 var
   log = require('./lib/logger.js'),
-  Promise = require("bluebird"),
-  Datastore = Promise.promisifyAll(require('nedb')),
+  Promise = require('bluebird'),
   debug = require('debug')('release_page:server'),
   http = require('http'),
   kcommon = require('./lib/common.js'),
   JiraApi = require('./lib/jira.js').Jira,
-  Git = require("./lib/git.js").GitHistory,
-  fs = require('fs'),
-  db = {
-    tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
-    tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
-  };
+  Git = require('./lib/git.js').GitHistory,
+  config = require('./lib/config.js').config();
+  db = require('./lib/db.js').db(config);
 
-// load configs
-var config = require('node-yaml-config').load('./config/config.yaml');
-if (config.jira && config.jira.oauth && config.jira.oauth.consumer_secret) {
-  config.jira.oauth.consumer_secret = fs.readFileSync(process.env['HOME'] + config.jira.oauth.consumer_secret, "utf8");
-}
+
 
 // load release-manager
 var
   jira = new JiraApi(config.jira, db),
-  app = require('./app.js')(db, jira, config);
+  app = require('./app.js')(jira);
 
 // "Unable to connect to JIRA during findIssueStatus" if run in parallel, thus we fetch the repository issues in serial
 Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {

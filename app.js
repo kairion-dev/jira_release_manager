@@ -10,7 +10,7 @@ var releases = require('./routes/releases');
 var openBranches = require('./routes/openBranches');
 
 
-function init(db, jira, config) {
+function init(jira) {
   var app = express();
 
 // view engine setup
@@ -27,7 +27,7 @@ function init(db, jira, config) {
   app.use('/bower_components', express.static(path.join(__dirname, 'bower_components')))
 
   app.use(function(req, res, next) {
-    req.db = db;
+    // req.db = db;
     req.jira = jira;
     res.locals.menuItems = [
       // { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected }, // we don't want 'releases' right now

@@ -1,4 +1,7 @@
 default:
+  databases:
+    tags: 'tags'
+    tickets: 'tickets'
   jira:
     host: 'kairion.atlassian.net'
     epicsKey: 'customfield_10500'
@@ -20,3 +23,7 @@ default:
       esc:
         path: '/home/mwick/kairion/esc.git'
         name: 'esc'
+testing:
+  databases:
+    tags: 'tests/temp/tags'
+    tickets: 'tests/temp/tickets'

@@ -77,7 +77,7 @@ module.exports.addStatus = function(type, tag, repo, status, date, author) {
     var element = { ['release.' + type]: { id: id, status: status, date: date, author: author }};
     db.tags.update({ type: 'release', tag: tag, repository: repo }, { $push: element }, {}, (err, numUpdated) => {
       if (err) reject(err);
-      else resolve(element)
+      else resolve(id)
     })
   })
 }

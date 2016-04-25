@@ -21,6 +21,11 @@ JRM is a tool to show all Jira tickets between two git tags (releases).
 4. Call `node oauth.js`. Get oauth verifier from the callback url
 5. Add access key to config
 
+## Bower
+
+* Bower is a package manager like npm (and quite similar to use) but for front-end packages
+* We currently use it to install the datetimepicker dependencies
+
 ## Open ideas / ToDos
 
 * (WIP) WebInterface to view all releases and tickets deployed

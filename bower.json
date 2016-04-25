@@ -1,0 +1,21 @@
+{
+  "name": "release_page",
+  "description": "Jira Release Manager",
+  "main": "index.js",
+  "authors": [
+    "Manuel Wick <manuelwick@gmx.de>"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "eonasdan-bootstrap-datetimepicker": "^4.17.37"
+  }
+}

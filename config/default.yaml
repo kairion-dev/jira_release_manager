@@ -1,6 +1,9 @@
 http:
   host: localhost
   port: 3000
+log:
+  level: 'info'
+  filename: '/tmp/jrm.log'
 jira:
   host: 'kairion.atlassian.net'
   epicsKey: 'customfield_10500'

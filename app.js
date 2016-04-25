@@ -1,5 +1,5 @@
 var express = require('express');
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -10,7 +10,7 @@ var releases = require('./routes/releases');
 var openBranches = require('./routes/openBranches');
 
 
-function init(db, jira, config) {
+function init(db, jira) {
   var app = express();
 
 // view engine setup

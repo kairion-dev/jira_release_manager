@@ -2,7 +2,6 @@ var
   log = require('./lib/logger.js'),
   Promise = require("bluebird"),
   Datastore = Promise.promisifyAll(require('nedb')),
-  debug = require('debug')('release_page:server'),
   http = require('http'),
   kcommon = require('./lib/common.js'),
   JiraApi = require('./lib/jira.js').Jira,
@@ -14,22 +13,24 @@ var
   };
 
 // load configs
-var config = require('node-yaml-config').load('./config/config.yaml');
-if (config.jira && config.jira.oauth && config.jira.oauth.consumer_secret) {
-  config.jira.oauth.consumer_secret = fs.readFileSync(process.env['HOME'] + config.jira.oauth.consumer_secret, "utf8");
+var config = require('config');
+
+var jiraConfig = config.get('jira');
+if (config.has('jira.oauth.consumer_secret')) {
+  jiraConfig.oauth.consumer_secret = fs.readFileSync(config.get('jira.oauth.consumer_secret'), "utf8");
 }
 
 // load release-manager
 var
-  jira = new JiraApi(config.jira, db),
-  app = require('./app.js')(db, jira, config);
+  jira = new JiraApi(jiraConfig, db),
+  app = require('./app.js')(db, jira);
 
 // "Unable to connect to JIRA during findIssueStatus" if run in parallel, thus we fetch the repository issues in serial
-Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {
+Promise.mapSeries(Object.keys(config.get('git.repositories')), (configId) => {
   var options = {
-    path: config.git.repositories[configId].path,
-    name: config.git.repositories[configId].name,
-    feature_prefix: config.git.featurePrefix
+    path: config.get('git.repositories.' + configId + '.path'),
+    name: config.get('git.repositories.' + configId + '.name'),
+    feature_prefix: config.get('git.featurePrefix')
   };
   var git = new Git(options, db);
 
@@ -59,7 +60,7 @@ Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {
             })
             .then(() => {
               log.info('Already fetched ' + Object.keys(fetchedIssues).length + ' issues from ' + tickets.length);
-              return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues})
+              return jira.fetchIssues(tickets, {fetchParents: true, fetchedIssues: fetchedIssues});
             });
         })
     })
@@ -67,7 +68,8 @@ Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {
   .then(() => {
     log.info('Inital fetch done, starting app');
 
-    var port = kcommon.normalizePort(process.env.PORT || '3000');
+    var port = kcommon.normalizePort(config.get('http.port') || '3000');
+    var host = config.get('http.host') || 'localhost';
     app.set('port', port);
 
     /**
@@ -80,14 +82,14 @@ Promise.mapSeries(Object.keys(config.git.repositories), (configId) => {
      * Listen on provided port, on all network interfaces.
      */
 
-    server.listen(port);
+    server.listen(port, host);
     server.on('error', kcommon.onError);
     server.on('listening', function onListening() {
       var addr = server.address();
       var bind = typeof addr === 'string'
         ? 'pipe ' + addr
         : 'port ' + addr.port;
-      debug('Listening on ' + bind);
+      log.info('Listening on ' + bind);
     });
   })
   .catch((e) => {

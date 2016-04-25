@@ -4,6 +4,9 @@ http:
 log:
   level: 'info'
   filename: '/tmp/jrm.log'
+databases:
+  tags: './tags'
+  tickets: './tickets'
 jira:
   host: 'kairion.atlassian.net'
   epicsKey: 'customfield_10500'

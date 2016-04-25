@@ -1,6 +1,7 @@
 var
   log = require('./lib/logger.js'),
   Promise = require("bluebird"),
+  config = require('config'),
   Datastore = Promise.promisifyAll(require('nedb')),
   http = require('http'),
   kcommon = require('./lib/common.js'),
@@ -8,13 +9,11 @@ var
   Git = require("./lib/git.js").GitHistory,
   fs = require('fs'),
   db = {
-    tags: Promise.promisifyAll(new Datastore({ filename: './tags', autoload: true })),
-    tickets: Promise.promisifyAll(new Datastore({ filename: './tickets', autoload: true }))
+    tags: Promise.promisifyAll(new Datastore({ filename: config.get('databases.tags'), autoload: true })),
+    tickets: Promise.promisifyAll(new Datastore({ filename: config.get('databases.tickets'), autoload: true }))
   };
 
-// load configs
-var config = require('config');
-
+// load jira configs
 var jiraConfig = config.get('jira');
 if (config.has('jira.oauth.consumer_secret')) {
   jiraConfig.oauth.consumer_secret = fs.readFileSync(config.get('jira.oauth.consumer_secret'), "utf8");

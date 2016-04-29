@@ -52,8 +52,6 @@ function objectValues(object) {
 	return Object.keys(object).map((key) => object[key]);
 }
 
-
-
 function arrayToObject(array, key) {
 	return array.reduce((obj, current) => {
 		obj[current[key]] = current;

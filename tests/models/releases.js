@@ -9,6 +9,18 @@ var
 chai.use(require('chai-things')); // to test array elements with chai
 
 
+// test plan
+// ---------
+// Still missing:
+// * test logic for invalid calls for
+//   * add/remove status
+//   * 
+
+
+// startup jira library
+var JiraApi = require('../../lib/jira.js').Jira;
+var jira = new JiraApi(config.jira, db);
+
 
 function drop(database) {
 	return db[database].removeAsync({}, { multi: true })
@@ -39,8 +51,6 @@ function checkSingleDoc(doc, source) {
 function objectValues(object) {
 	return Object.keys(object).map((key) => object[key]);
 }
-
-
 
 function arrayToObject(array, key) {
 	return array.reduce((obj, current) => {
@@ -210,10 +220,6 @@ describe('Unit testing', function() {
 			});
 		});
 		describe('Test logic that works with tickets', function() {
-			// startup jira library
-			var JiraApi = require('../../lib/jira.js').Jira;
-			var jira = new JiraApi(config.jira, db);
-			
 			// to access tickets more easy (via key)
 			var ticketsObj = arrayToObject(tickets1, 'key');
 
@@ -222,9 +228,10 @@ describe('Unit testing', function() {
 			kd7777.children = [ ticketsObj['KD-1111'] ]; // add KD-1111 as child to KD-7777
 
 			before(function() {
-				console.log('Populate the tickets database');
+				console.log('Repopulate the tickets database');
 				return insert('tickets', tickets1, true);
 			});
+
 			it('getTickets()', function() {
 				return releases.getTickets(releases1[0], jira)
 					.then((tickets) => {
@@ -325,15 +332,100 @@ describe('Unit testing', function() {
 				});
 			});
 		});
+		describe('Test release status', function() {
+			// to access tickets more easy (via key)
+			var ticketsObj = arrayToObject(tickets1, 'key');
+			// to identify single elements later on
+			var elementId1, elementId2, elementId3, elementId4;
+
+			before(function() {
+				console.log('Repopulate the tickets database');
+				return insert('tickets', tickets1, true);
+			});
+
+			it('add status for testing and deployment', function() {
+				return releases.addStatus('deploy', '15.12.2', 'repo1', 'fails', '22.04.2016 15:51', 'Karl')
+					.then((id) => {
+						id.should.not.be.empty; // we expect an id to identify the element later on
+						elementId1 = id; // temporary save this id
+						return releases.addStatus('testing', '15.12.2', 'repo1', 'works', '22.04.2016 16:00', 'Manuel')
+					})
+					.then((id) => {
+						id.should.not.be.empty;
+						elementId2 = id;
+						return releases.addStatus('deploy', '15.12.2', 'repo1', 'works', '22.04.2016 17:15', 'Karl')
+					})
+					.then((id) => {
+						id.should.not.be.empty;
+						elementId3 = id;
+						return releases.getTagReleases('15.12.2', jira);
+					})
+					.then((docs) => {
+						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+
+						// check status for deploy
+						docs['repo1'].release.deploy.should.have.lengthOf(2);
+						docs['repo1'].release.deploy[0].should.deep.equal({id: elementId1, status: 'fails', date: '22.04.2016 15:51', author: 'Karl'});
+						docs['repo1'].release.deploy[1].should.deep.equal({id: elementId3, status: 'works', date: '22.04.2016 17:15', author: 'Karl'});
+
+						// check status for testing
+						docs['repo1'].release.testing.should.have.lengthOf(1);
+						docs['repo1'].release.testing[0].should.deep.equal({id: elementId2, status: 'works', date: '22.04.2016 16:00', author: 'Manuel'});
+					})
+			});
+			it('add another status for same tag but different repo', function() {
+				return releases.addStatus('deploy', '15.12.2', 'repo2', 'works', '22.04.2016 17:30', 'Matthias')
+				.then((id) => {
+						id.should.not.be.empty; // we expect an id to identify the element later on
+						elementId4 = id; // temporary save this id
+						return releases.getTagReleases('15.12.2', jira);
+					})
+					.then((docs) => {
+						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+
+						// repo1 should have the exact same status as before
+						docs['repo1'].release.deploy.should.have.lengthOf(2);
+						docs['repo1'].release.deploy[0].should.deep.equal({id: elementId1, status: 'fails', date: '22.04.2016 15:51', author: 'Karl'});
+						docs['repo1'].release.deploy[1].should.deep.equal({id: elementId3, status: 'works', date: '22.04.2016 17:15', author: 'Karl'});
+						docs['repo1'].release.testing.should.have.lengthOf(1);
+						docs['repo1'].release.testing[0].should.deep.equal({id: elementId2, status: 'works', date: '22.04.2016 16:00', author: 'Manuel'});
+
+						// repo2 should have the new status
+						docs['repo2'].release.deploy.should.have.lengthOf(1);
+						docs['repo2'].release.deploy[0].should.deep.equal({id: elementId4, status: 'works', date: '22.04.2016 17:30', author: 'Matthias'});
+					})
+			});
+			it('remove status', function() {
+				return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId1)
+					.then(() => { return releases.getTagReleases('15.12.2', jira); })
+					.then((docs) => {
+						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+
+						// elementId1 should be removed, the rest still should be there
+						docs['repo1'].release.deploy.should.have.lengthOf(1);
+						docs['repo1'].release.deploy[0].should.deep.equal({id: elementId3, status: 'works', date: '22.04.2016 17:15', author: 'Karl'});
+						docs['repo1'].release.testing.should.have.lengthOf(1);
+						docs['repo1'].release.testing[0].should.deep.equal({id: elementId2, status: 'works', date: '22.04.2016 16:00', author: 'Manuel'});
+
+						docs['repo2'].release.deploy.should.have.lengthOf(1);
+						docs['repo2'].release.deploy[0].should.deep.equal({id: elementId4, status: 'works', date: '22.04.2016 17:30', author: 'Matthias'});
+
+						return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId3)
+					})
+					.then(() => { return releases.getTagReleases('15.12.2', jira); })
+					.then((docs) => {
+						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+
+						// now elementId3 should be removed, the rest still should be there
+						docs['repo1'].release.testing.should.have.lengthOf(1);
+						docs['repo1'].release.testing[0].should.deep.equal({id: elementId2, status: 'works', date: '22.04.2016 16:00', author: 'Manuel'});
+
+						docs['repo2'].release.deploy.should.have.lengthOf(1);
+						docs['repo2'].release.deploy[0].should.deep.equal({id: elementId4, status: 'works', date: '22.04.2016 17:30', author: 'Matthias'});
+
+						return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId3)
+					})
+			});
+		});
 	});
-	
-	// it('First real test', function() {
-	// 	return releases.getRelease('repo1', '16.01.2')
-	// 		.then((doc) => {
-	// 			doc.should.contain.all.keys(['type', 'tag', 'repository']);
-	// 			doc.type.should.equal('release');
-	// 			doc.tag.should.equal('16.01.2');
-	// 			doc.repository.should.equal('repo1');
-	// 		})
-	// })
 });

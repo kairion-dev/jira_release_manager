@@ -3,6 +3,7 @@ var
 	Promise = require('bluebird'),
   db = require('../lib/db').db();
 
+// in fact the exact same logic as getAllReleases
 module.exports.getAllOpenBranches = function() {
 	return new Promise(
     (resolve, reject) => {
@@ -31,6 +32,7 @@ module.exports.getAllOpenBranches = function() {
     })
 };
 
+// in fact the exact same logic as getRelease
 module.exports.getOpenBranch = function (tag, repo) {
 	return new Promise(
     (resolve, reject) => {
@@ -41,6 +43,7 @@ module.exports.getOpenBranch = function (tag, repo) {
     })
 };
 
+// in fact the exact same logic as the lower part of getTagReleases
 module.exports.enrichOpenBranchesWithTickets = function(docs, jira) {
 	return Promise.map(docs, (doc, i, total) => {
     return jira
@@ -63,6 +66,7 @@ module.exports.enrichOpenBranchesWithTickets = function(docs, jira) {
   });
 };
 
+// in fact the exact same logic as the upper part of getTagReleases
 module.exports.getOpenBranches = function(tag) {
 	return new Promise(
     (resolve, reject) => {

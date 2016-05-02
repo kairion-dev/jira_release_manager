@@ -5,6 +5,7 @@ var
 	should = chai.should(),
 	Promise = require('bluebird'),
 	config = require('config'),
+	helper = require('../helper/common.js'),
 	Git = require('nodegit'),
 	GitHistory = require('../../lib/git.js').GitHistory,
 	moment = require('moment'),
@@ -13,52 +14,42 @@ var
 
 chai.use(require('chai-things')); // to test array elements with chai
 
-// TODO create helper lib for all tests (models/releases, startup/tags, etc.)
-function arrayToObject(array, key) {
-	return array.reduce((obj, current) => {
-		obj[current[key]] = current;
-		return obj;
-	}, {});
-}
+
+var repoId = 'testgit';
+var options = {
+  path: config.get('git.repositories.' + repoId + '.path'),
+  name: config.get('git.repositories.' + repoId + '.name'),
+  feature_prefix: config.get('git.featurePrefix')
+};
+// init library to generate test repositories
+var RepositoryGenerator = require('../helper/repositoryGenerator.js').RepositoryGenerator;
+var Generator = new RepositoryGenerator(options.path);
+// init git library for testing
+var git = new GitHistory(options, db);
 
 
-var RepositoryGenerator = require('../helper/generateRepositories.js').RepositoryGenerator;
-var path = 'tests/data/repositories/testrepo1';
-
-
-before(function() {
-
-	var Generator = new RepositoryGenerator(path);
-	var branches = [ 'develop', 'feature/feature1', 'feature/feature2', 'feature/feature3' ];
-
-	return db['tags'].removeAsync({}, { multi: true })
-		.then(() => Generator.init(branches, Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 00:00:00').unix(), 120)))
-		.then(() => Generator.switchToBranch('feature/feature2'))
-		.then(() => Generator.createCommit([ 'file2.txt' ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 02:02:20').unix(), 120), 'KD-2222 commit message 2'))
-		.then(() => Generator.switchToBranch('feature/feature3'))
-		.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 03:03:30').unix(), 120), 'KD-3333 commit message 3'))
-		.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'))
-		.then((commitId) => Generator.repo.createTag(commitId, '16.01.1', 'Message for tag: 16.01.1!'))
-		.catch((e) => {
-			console.log(e);
-		})
-})
-
-
-describe('test', function() {
-	var configId = 'testgit';
-	var options = {
-    path: config.get('git.repositories.' + configId + '.path'),
-    name: config.get('git.repositories.' + configId + '.name'),
-    feature_prefix: config.get('git.featurePrefix')
-  };
-  var git = new GitHistory(options, db);
-	it('first tag, should contain two tickets', function() {
-		return git.initialize()
-			.then((tags) => {
-				console.log(tags);
-				return db.tags.findAsync({ type: 'release' })
+describe('check repository initializing for tags', function() {
+	before(function() {
+		var branches = [ 'develop', 'feature/feature1', 'feature/feature2', 'feature/feature3' ];
+		return db['tags'].removeAsync({}, { multi: true })
+			.then(() => Generator.init(branches, Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 00:00:00').unix(), 120)))
+			.then(() => Generator.switchToBranch('feature/feature1'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 01:04:00').unix(), 120), 'KD-1111 commit message 1'))
+			.then(() => Generator.switchToBranch('feature/feature2'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 02:02:20').unix(), 120), 'KD-2222 commit message 2'))
+			.then(() => Generator.switchToBranch('feature/feature3'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 03:03:30').unix(), 120), 'KD-3333 commit message 3'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'))
+			.then(() => Generator.mergeBranches('develop', 'feature/feature3', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:10:00').unix(), 120)))
+			//.then(() => Generator.mergeBranches('develop', 'feature/feature3', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:20:00').unix(), 120)))
+			.then((commitId) => Generator.repo.createTag(commitId, '16.01.1', 'Message for tag: 16.01.1'))
+			.catch((e) => {
+				console.log(e);
 			})
+	})
+	it('first release tag, should contain two tickets', function() {
+		return git.initialize()
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
 			.then((docs) => {
 				// should contain two tickets from the commits
 				docs.should.have.lengthOf(1);
@@ -70,30 +61,147 @@ describe('test', function() {
 				doc.commits.should.equal(3);
 			})
 	});
-	it('second tag should only show differences to first tag', function() {
-		var Generator = new RepositoryGenerator(path);
-		return Generator.open()
-			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-30 00:00:00').unix(), 120), 'KD-5555 commit message 5'))
-			.then((commitId) => Generator.repo.createTag(commitId, '16.01.2', 'Message for tag: 16.01.2!'))
-			.then(() => git.initialize())
+	it('second release tag should only show differences to first tag', function() {
+		return Generator.mergeBranches('develop', 'feature/feature2') // merge second branch that was opened before the third, but was not in the last release tag
+			.then((commitId) => Generator.repo.createTag(commitId, '16.01.2', 'Message for tag: 16.01.2'))
+			.then(() => git.initialize()) // init git again to load updates in the repository
 			.then(() => db.tags.findAsync({ type: 'release' }))
 			.then((docs) => {
 				docs.should.have.lengthOf(2);
-				docs = arrayToObject(docs, 'tag');
+				docs = helper.arrayToObject(docs, 'tag');
 				// should contain the same values as before
 				var doc = docs['16.01.1'];
 				doc.tag.should.equal('16.01.1');
 				doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-3333');
 				doc.tickets.should.contain('KD-4444');
-				doc.commits.should.equal(3);
+				doc.commits.should.equal(3); // 2 commits + initial commit
 				// should contain the differences to the first tag, that means one commit with ticket KD-5555
 				doc = docs['16.01.2'];
 				doc.tag.should.equal('16.01.2');
 				doc.repository.should.equal('testgit');
-				doc.tickets.should.contain('KD-5555');
-				doc.commits.should.equal(1);
+				doc.tickets.should.contain('KD-2222');
+				doc.commits.should.equal(2); // 1 commit + initial commit
 			})
+	});
+	it('add third release tag with new commits', function() {
+		return Generator.switchToBranch('develop')
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-30 05:00:00').unix(), 120), 'KD-6666 commit message 6'))
+			.then(() => Generator.mergeBranches('develop', 'feature/feature1'))
+			.then((commitId) => Generator.repo.createTag(commitId, '16.01.3', ''))
+			.then(() => git.initialize()) // init git again to load updates in the repository
+			.then(() => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs = helper.arrayToObject(docs, 'tag');
+				var doc = docs['16.01.3'];
+				doc.tag.should.equal('16.01.3');
+				doc.repository.should.equal('testgit');
+				doc.tickets.should.contain('KD-1111');
+				doc.tickets.should.contain('KD-6666');
+				doc.commits.should.equal(3); // 2 commits + initial commit
+			});
 	});
 });
 
+
+describe('check next release', function() {
+	it.skip('todo', function() {
+
+	});
+});
+
+
+describe('check repository initializing for open branches', function() {
+	before(function() {
+		var branches = [ 'develop', 'feature/feature1', 'feature/feature2', 'feature/feature3' ];
+		return db['tags'].removeAsync({}, { multi: true })
+			.then(() => Generator.init(branches, Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 00:00:00').unix(), 120)))
+			.then(() => Generator.switchToBranch('feature/feature1'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 01:04:00').unix(), 120), 'KD-1111 commit message 1'))
+			.then(() => Generator.switchToBranch('feature/feature2'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 02:02:20').unix(), 120), 'KD-2222 commit message 2'))
+			.then(() => Generator.switchToBranch('feature/feature3'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 03:03:30').unix(), 120), 'KD-3333 commit message 3'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'))
+			.catch((e) => {
+				console.log(e);
+			})
+	})
+	it('should contain all three branches cause none of them was closed', function() {
+		return git.initialize()
+			.then((tags) => db.tags.findAsync({ type: 'branch' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(3);
+				docs = helper.arrayToObject(docs, 'tag');
+				docs.feature1.commits.should.equal(1);
+				docs.feature1.tickets.should.contain('KD-1111');
+				docs.feature2.commits.should.equal(1);
+				docs.feature2.tickets.should.contain('KD-2222');
+				docs.feature3.commits.should.equal(2);
+				docs.feature3.tickets.should.contain('KD-3333');
+				docs.feature3.tickets.should.contain('KD-4444');
+			})
+	});
+	it.skip('should contain only feature1 and feature3 as open branches cause feature2 was closed', function() {
+		return Generator.mergeBranches('develop', 'feature/feature2', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:20:00').unix(), 120))
+			// .then(() => db['tags'].removeAsync({ type: 'branch' }, { multi: true })) // currently only works when removing the branches from tags database
+			.then(() => git.initialize())
+			.then((tags) => db.tags.findAsync({ type: 'branch' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(2);
+				docs = helper.arrayToObject(docs, 'tag');
+				docs.feature1.commits.should.equal(1);
+				docs.feature1.tickets.should.contain('KD-1111');
+				docs.feature3.commits.should.equal(2);
+				docs.feature3.tickets.should.contain('KD-3333');
+				docs.feature3.tickets.should.contain('KD-4444');
+			});
+	});
+	it.skip('test with another closed feautre', function() {
+		//TODO
+	});
+	it.skip('test whats happens when a release tage is generated', function() {
+		//TODO
+		// .then((commitId) => Generator.repo.createTag(commitId, '16.01.1', 'Message for tag: 16.01.1'))
+	});
+});
+
+
+describe('test git log and message parsing', function() {
+
+	var commitId = {};
+
+	before(function() {
+		var author = Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 12:12:12').unix(), 120);
+		return Generator.init([], author)
+			.then(() => {
+				return Generator.createCommit([], author, 'message\nover\nmultiple\n\n\nlines\ryeah!\r\r');
+			})
+			.then((id) => {
+				commitId.newLines = id;
+				return Generator.createCommit([], author, '"quotes" should not " break "" anything');
+			})
+			.then((id) => {
+				commitId.quotes = id;
+				return Generator.createCommit([], author, 'i got \\s \\\\ in my message \\');
+			})
+			.then((id) => {
+				commitId.backslash = id;
+				return Generator.createCommit([], author, '\t\t and also \t tabs');
+			})
+			.then((id) => {
+				commitId.tabs = id;
+				return Generator.repo.createTag(id, 'tag', '');
+			});
+	});
+	it('check multiple lines, backslashes, tabs and quotes', function() {
+		return git.gitLog('tag')
+			.then((commits) => {
+				commits = helper.arrayToObject(commits, 'id');
+				commits[commitId.newLines].message.should.equal('message\nover\nmultiple\n\n\nlines\nyeah!\n\n');
+				commits[commitId.backslash].message.should.equal('i got \\s \\\\ in my message \\');
+				commits[commitId.tabs].message.should.equal('\t\t and also \t tabs');
+				commits[commitId.quotes].message.should.equal('"quotes" should not " break "" anything');
+			});
+	});
+});

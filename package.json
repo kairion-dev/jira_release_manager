@@ -5,7 +5,10 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "postinstall": "./node_modules/bower/bin/bower install"
+    "postinstall": "./node_modules/bower/bin/bower install",
+    "test": "npm run test-models && npm run test-startup",
+    "test-models": "./node_modules/mocha/bin/mocha tests/models/releases.js",
+    "test-startup": "./node_modules/mocha/bin/mocha tests/startup/tags.js"
   },
   "author": "Karl Fritsche <karl.fritsche@kairion.de>",
   "contributors": [

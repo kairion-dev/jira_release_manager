@@ -2,7 +2,8 @@ var
 	chai = require('chai'),
 	should = chai.should(),
 	Promise = require('bluebird'),
-	config = require('../../lib/config.js').config('testing'),
+	config = require('config'),
+	helper = require('../helper/common.js'),
 	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
 	releases = require('../../models/releases.js'); // ... so that models will work upon the corresponding databases (internally)
 
@@ -13,8 +14,6 @@ chai.use(require('chai-things')); // to test array elements with chai
 // ---------
 // Still missing:
 // * test logic for invalid calls for
-//   * add/remove status
-//   * 
 
 
 // startup jira library
@@ -43,21 +42,6 @@ function checkSingleDoc(doc, source) {
 	// TODO extend: check all properties automatically
 };
 
-/**
- * Returns the object values (since we don't have Object.values() yet - will come in ECMAScript 2017)
- * @param  {[type]} object [description]
- * @return {[type]}        [description]
- */
-function objectValues(object) {
-	return Object.keys(object).map((key) => object[key]);
-}
-
-function arrayToObject(array, key) {
-	return array.reduce((obj, current) => {
-		obj[current[key]] = current;
-		return obj;
-	}, {});
-}
 
 /**
  * Generate a KD-0 ticket. Uses the same logic as jira.js does.
@@ -127,7 +111,7 @@ describe('Unit testing', function() {
 	});
 	describe('Release model', function() {
 		before(function() {
-			console.log('Populate the tags database with releases');
+			// Populate the tags database with releases
 			return insert('tags', releases1, true);
 		});
 		it('Release model should return the same values as direct db access', function() {
@@ -221,14 +205,14 @@ describe('Unit testing', function() {
 		});
 		describe('Test logic that works with tickets', function() {
 			// to access tickets more easy (via key)
-			var ticketsObj = arrayToObject(tickets1, 'key');
+			var ticketsObj = helper.arrayToObject(tickets1, 'key');
 
 			// prepare parent ticket
 			var kd7777 = ticketsObj['KD-7777'];
 			kd7777.children = [ ticketsObj['KD-1111'] ]; // add KD-1111 as child to KD-7777
 
 			before(function() {
-				console.log('Repopulate the tickets database');
+				// Repopulate the tickets database
 				return insert('tickets', tickets1, true);
 			});
 
@@ -266,7 +250,7 @@ describe('Unit testing', function() {
 				it('correct structure', function() {
 					return releases.getTagReleases('15.12.2', jira)
 						.then((docs) => {
-							docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 							// we expect 2 repositories in the release
 							docs.should.contain.keys(['repo1', 'repo2']);
@@ -281,7 +265,7 @@ describe('Unit testing', function() {
 				it('features and bugfixes are separated correctly', function() {
 					return releases.getTagReleases('16.01.1', jira)
 						.then((docs) => {
-							docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 							// we expect 3 repositories in the release
 							docs.should.contain.keys(['repo1', 'repo2', 'repo3']);
@@ -305,7 +289,7 @@ describe('Unit testing', function() {
 							return releases.getTagReleases('15.12.2', jira);
 						})
 						.then((docs) => {
-							docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 							// we expect 2 repositories in the release
 							docs.should.contain.keys(['repo1', 'repo2']);
@@ -334,12 +318,12 @@ describe('Unit testing', function() {
 		});
 		describe('Test release status', function() {
 			// to access tickets more easy (via key)
-			var ticketsObj = arrayToObject(tickets1, 'key');
+			var ticketsObj = helper.arrayToObject(tickets1, 'key');
 			// to identify single elements later on
 			var elementId1, elementId2, elementId3, elementId4;
 
 			before(function() {
-				console.log('Repopulate the tickets database');
+				// Repopulate the tickets database
 				return insert('tickets', tickets1, true);
 			});
 
@@ -361,7 +345,7 @@ describe('Unit testing', function() {
 						return releases.getTagReleases('15.12.2', jira);
 					})
 					.then((docs) => {
-						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 						// check status for deploy
 						docs['repo1'].release.deploy.should.have.lengthOf(2);
@@ -381,7 +365,7 @@ describe('Unit testing', function() {
 						return releases.getTagReleases('15.12.2', jira);
 					})
 					.then((docs) => {
-						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 						// repo1 should have the exact same status as before
 						docs['repo1'].release.deploy.should.have.lengthOf(2);
@@ -399,7 +383,7 @@ describe('Unit testing', function() {
 				return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId1)
 					.then(() => { return releases.getTagReleases('15.12.2', jira); })
 					.then((docs) => {
-						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 						// elementId1 should be removed, the rest still should be there
 						docs['repo1'].release.deploy.should.have.lengthOf(1);
@@ -414,7 +398,7 @@ describe('Unit testing', function() {
 					})
 					.then(() => { return releases.getTagReleases('15.12.2', jira); })
 					.then((docs) => {
-						docs = arrayToObject(docs, 'repo'); // to access the single repository more easy
+						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
 						// now elementId3 should be removed, the rest still should be there
 						docs['repo1'].release.testing.should.have.lengthOf(1);

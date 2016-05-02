@@ -26,6 +26,10 @@ class RepositoryGenerator {
 			.then((ref) => this.repo.checkoutBranch(ref))
 	}
 
+	mergeBranches(to, from, author) {
+		return this.repo.mergeBranches(to, from, author); // , author, Git.Merge.PREFERENCE.NONE, new Git.MergeOptions()
+	}
+
 	createCommit(files, author, message) {
 		return this.repo.createCommitOnHead(files, author, author, message);
 	}

@@ -27,7 +27,7 @@ router.get('/repo/:repo', function(req, res, next) {
 
 
 router.get('/plan', function(req, res, next) {
-  model.getAllTags()
+  model.getAggregatedTags()
     .then((releases) => {
       var templateVars = {
         title: 'Release Plans',

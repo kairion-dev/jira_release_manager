@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
     menuSelected: 'menu-open-branches'
   };
 
-  model.getAllTags()
+  model.getAggregatedTags()
     .then((branches) => {
       templateVars.branches = branches;
       res.render('openBranches/index', templateVars);

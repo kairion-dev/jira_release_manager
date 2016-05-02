@@ -17,7 +17,7 @@ module.exports = function(tagType) {
     })
   }
 
-  module.getAllTags = function() {
+  module.getAggregatedTags = function() {
     return new Promise(
       (resolve, reject) => {
         db.tags.find({ type: tagType }).sort({ tag: -1 }).exec((err, docs) => {

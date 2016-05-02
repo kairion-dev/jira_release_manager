@@ -5,7 +5,8 @@ var
 	config = require('config'),
 	helper = require('../helper/common.js'),
 	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
-	releases = require('../../models/tags.js')('release'); // ... so that models will work upon the corresponding databases (internally)
+	releases = require('../../models/tags.js')('release'), // ... so that models will work upon the corresponding databases (internally)
+	openBranches = require('../../models/tags.js')('branch');
 
 chai.use(require('chai-things')); // to test array elements with chai
 
@@ -79,13 +80,16 @@ beforeEach(function() {
 });
 
 describe('Unit testing', function() {
-	var releases1 = [
+	var tags1 = [
 		{"type":"release","tag":"16.01.1","repository":"repo1","tickets":["KD-0 bootup changes","KD-0 brain connect mode","KD-1111","KD-2222","KD-3333"],"commits":50,"last_commit_date":"Fri Jan 29 16:01:09 2016 +0100","release":{"testing":[],"deploy":[]}},
 		{"type":"release","tag":"16.01.1","repository":"repo2","tickets":["KD-0 bugfix","KD-1111","KD-2222","KDO-111"],"commits":35,"last_commit_date":"Fri Jan 29 16:01:23 2016 +0100","release":{"testing":[],"deploy":[]}},
 		{"type":"release","tag":"16.01.1","repository":"repo3","tickets":["KD-2222"],"commits":10,"last_commit_date":"Wed Dec 2 13:14:29 2015 +0100","release":{"testing":[],"deploy":[]}},
 		{"type":"release","tag":"15.12.2","repository":"repo1","tickets":["KD-4444","KD-5555"],"commits":7,"last_commit_date":"Fri Dec 4 12:55:33 2015 +0100","release":{"testing":[],"deploy":[]}},
 		{"type":"release","tag":"15.12.2","repository":"repo2","tickets":["KD-4444"],"commits":6,"last_commit_date":"Thu Dec 3 07:14:29 2015 +0100","release":{"testing":[],"deploy":[]}},
-		{"type":"release","tag":"15.12.1","repository":"repo2","tickets":["KD-6666","KDO-222"],"commits":8,"last_commit_date":"Tue Dec 1 15:00:00 2015 +0100","release":{"testing":[],"deploy":[]}}
+		{"type":"release","tag":"15.12.1","repository":"repo2","tickets":["KD-6666","KDO-222"],"commits":8,"last_commit_date":"Tue Dec 1 15:00:00 2015 +0100","release":{"testing":[],"deploy":[]}},
+		{"type":"branch","tag":"16.04.1","repository":"repo1","tickets":["KD-8888","KD-0 quick fix"],"commits":4,"last_commit_date":"Tue Apr 05 18:18:18 2016 +0100","release":{"testing":[],"deploy":[]}},
+		{"type":"branch","tag":"16.04.1","repository":"repo4","tickets":["KD-8889"],"commits":1000,"last_commit_date":"Tue Apr 05 18:18:22 2016 +0100","release":{"testing":[],"deploy":[]}},
+		{"type":"branch","tag":"16.04.2","repository":"repo4","tickets":["KD-9999"],"commits":10,"last_commit_date":"Tue Apr 05 19:19:19 2016 +0100","release":{"testing":[],"deploy":[]}},
 	];
 	var tickets1 = [
 		{"key":"KD-1111","project":"KD","summary":"ai doc-update","status":"Deployed","issueType":"Sub-task","assignee":"Tomasz Porst","components":[],"parent":"KD-7777","newCap":false},
@@ -96,25 +100,46 @@ describe('Unit testing', function() {
 		{"key":"KD-6666","project":"KD","summary":"High memory usage of EC","status":"Deployed","issueType":"Bug","assignee":"Matthias Lersch","components":[],"parent":false,"newCap":false},
 		{"key":"KD-7777","project":"KD","summary":"The parent ticket","status":"Deployed","issueType":"Development","assignee":"Tomasz Porst","components":[],"parent":false,"newCap":false},
 		{"key":"KDO-111","project":"KDO","summary":"Drupal security updates","status":"Not done / cancelled","issueType":"Server maintenance","assignee":"Karl Fritsche","components":[],"parent":false,"newCap":false},
-		{"key":"KDO-222","project":"KDO","summary":"Epos für In-storemedia anlegen","status":"Deployed","issueType":"Enhance / debug shop","assignee":"Vikrant Agrawal","components":[],"parent":false,"newCap":false}
+		{"key":"KDO-222","project":"KDO","summary":"Epos für In-storemedia anlegen","status":"Deployed","issueType":"Enhance / debug shop","assignee":"Vikrant Agrawal","components":[],"parent":false,"newCap":false},
+		{"key":"KD-8888","project":"KD","summary":"some deployment ticket","status":"Deployed","issueType":"Development","assignee":"Some guy","components":[],"parent":false,"newCap":false},
+		{"key":"KD-8889","project":"KD","summary":"another deployment ticket","status":"Deployed","issueType":"Development","assignee":"The same guy","components":[],"parent":false,"newCap":false},
 	];
 	describe('Some basics', function() {
 		it('Nothing in database, nothing should be returned', function() {
 			return drop('tags') // make sure db is empty
 				.then(() => {
-					return releases.getAllTags();
+					return releases.getAggregatedTags();
 				}) //TODO also test other releases.methods()
 				.then((docs) => {
 					docs.should.be.empty;
 				});
 		});
+		it('Releases and Open Branches should not interfere', function() {
+			// Populate the tags database with releases and open branches
+			return insert('tags', tags1, true)
+				.then(() => releases.getRepoTags('repo1')) // get releases for repo1 which should not contain any open branch
+				.then((docs) => {
+					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					docs.should.have.lengthOf(2);
+					docs.should.include.something.that.deep.equals(tags1[0]);
+					docs.should.include.something.that.deep.equals(tags1[3]);
+
+					return openBranches.getRepoTags('repo1'); // get open branches for repo1 which should not contain any releases
+				})
+				.then((docs) => {
+					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					docs.should.have.lengthOf(1);
+					docs.should.include.something.that.deep.equals(tags1[6]);
+				});
+		});
 	});
-	describe('Release model', function() {
+	describe('Test Releases', function() {
 		before(function() {
-			// Populate the tags database with releases
-			return insert('tags', releases1, true);
+			// Repopulate the tags database with releases and open branches
+			return insert('tags', tags1, true);
 		});
 		it('Release model should return the same values as direct db access', function() {
+			var releases1 = tags1.filter((tag) => tag.type == "release");
 			return Promise.each(releases1, (item, i, total) => {
 				// access each release directly through database
 				return db.tags.findAsync({type: item.type, tag: item.tag, repository: item.repository})
@@ -135,12 +160,12 @@ describe('Unit testing', function() {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(2);
-					docs.should.include.something.that.deep.equals(releases1[0]);
-					docs.should.not.include.something.that.deep.equals(releases1[1]);
-					docs.should.not.include.something.that.deep.equals(releases1[2]);
-					docs.should.include.something.that.deep.equals(releases1[3]);
-					docs.should.not.include.something.that.deep.equals(releases1[4]);
-					docs.should.not.include.something.that.deep.equals(releases1[5]);
+					docs.should.include.something.that.deep.equals(tags1[0]);
+					docs.should.not.include.something.that.deep.equals(tags1[1]);
+					docs.should.not.include.something.that.deep.equals(tags1[2]);
+					docs.should.include.something.that.deep.equals(tags1[3]);
+					docs.should.not.include.something.that.deep.equals(tags1[4]);
+					docs.should.not.include.something.that.deep.equals(tags1[5]);
 
 					return releases.getRepoTags('repo2');
 				})
@@ -148,12 +173,12 @@ describe('Unit testing', function() {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(3);
-					docs.should.not.include.something.that.deep.equals(releases1[0]);
-					docs.should.include.something.that.deep.equals(releases1[1]);
-					docs.should.not.include.something.that.deep.equals(releases1[2]);
-					docs.should.not.include.something.that.deep.equals(releases1[3]);
-					docs.should.include.something.that.deep.equals(releases1[4]);
-					docs.should.include.something.that.deep.equals(releases1[5]);
+					docs.should.not.include.something.that.deep.equals(tags1[0]);
+					docs.should.include.something.that.deep.equals(tags1[1]);
+					docs.should.not.include.something.that.deep.equals(tags1[2]);
+					docs.should.not.include.something.that.deep.equals(tags1[3]);
+					docs.should.include.something.that.deep.equals(tags1[4]);
+					docs.should.include.something.that.deep.equals(tags1[5]);
 
 					return releases.getRepoTags('repo3');
 				})
@@ -161,17 +186,17 @@ describe('Unit testing', function() {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(1);
-					docs.should.not.include.something.that.deep.equals(releases1[0]);
-					docs.should.not.include.something.that.deep.equals(releases1[1]);
-					docs.should.include.something.that.deep.equals(releases1[2]);
-					docs.should.not.include.something.that.deep.equals(releases1[3]);
-					docs.should.not.include.something.that.deep.equals(releases1[4]);
-					docs.should.not.include.something.that.deep.equals(releases1[4]);
+					docs.should.not.include.something.that.deep.equals(tags1[0]);
+					docs.should.not.include.something.that.deep.equals(tags1[1]);
+					docs.should.include.something.that.deep.equals(tags1[2]);
+					docs.should.not.include.something.that.deep.equals(tags1[3]);
+					docs.should.not.include.something.that.deep.equals(tags1[4]);
+					docs.should.not.include.something.that.deep.equals(tags1[4]);
 				})
 		});
-		describe('getAllTags()', function() {
+		describe('getAggregatedTags()', function() {
 			it('commits should equal the aggregated commits for each tag', function() {
-				return releases.getAllTags()
+				return releases.getAggregatedTags()
 					.then((docs) => {
 						docs['16.01.1'].commits.should.equal(95);
 						docs['15.12.2'].commits.should.equal(13);
@@ -179,7 +204,7 @@ describe('Unit testing', function() {
 					});
 			});
 			it('last_commit_date should equal the latest commit within the tag', function() {
-				return releases.getAllTags()
+				return releases.getAggregatedTags()
 					.then((docs) => {
 						docs['16.01.1'].last_commit_date.should.equal("Fri Jan 29 16:01:23 2016 +0100");
 						docs['15.12.2'].last_commit_date.should.equal("Fri Dec 4 12:55:33 2015 +0100");
@@ -192,7 +217,7 @@ describe('Unit testing', function() {
 						array.should.contain(element);
 					});
 				};
-				return releases.getAllTags()
+				return releases.getAggregatedTags()
 					.then((docs) => {
 						docs['16.01.1'].tickets.should.have.lengthOf(7); // 3 (KD-xxxx) + 3 (KD-0) + 1 (KDO-xxx)
 						shouldContainElements(docs['16.01.1'].tickets, ["KD-0 bootup changes","KD-0 brain connect mode","KD-1111","KD-2222","KD-3333","KD-0 bugfix","KDO-111"]);
@@ -217,7 +242,7 @@ describe('Unit testing', function() {
 			});
 
 			it('getTickets()', function() {
-				return releases.getTickets(releases1[0], jira)
+				return releases.getTickets(tags1[0], jira)
 					.then((tickets) => {
 						removeIds(tickets);
 						// should include the 'normal' tickets
@@ -231,7 +256,7 @@ describe('Unit testing', function() {
 						// so we expect no KD-1111 within the tickets
 						tickets.should.not.include.something.that.deep.equals(ticketsObj['KD-1111']);
 
-						return releases.getTickets(releases1[1], jira);
+						return releases.getTickets(tags1[1], jira);
 					})
 					.then((tickets) => {
 						removeIds(tickets);
@@ -410,6 +435,50 @@ describe('Unit testing', function() {
 						return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId3)
 					})
 			});
+		});
+	});
+	describe('Test Open Branches', function() {
+		// to access tickets more easy (via key)
+		var ticketsObj = helper.arrayToObject(tickets1, 'key');
+
+		before(function() {
+			// Repopulate the tags database with releases and open branches
+			return insert('tags', tags1, true);
+		});
+		it('Basic test of all tag methods that are used in the open branch routes', function() {
+			// in fact open branches use the same logic as releases, so we just test real quick if all method calls used in the open branch routes do work
+			return openBranches.getAggregatedTags()
+				.then((docs) => {
+					docs['16.04.1'].commits.should.equal(1004);
+					docs['16.04.2'].commits.should.equal(10);
+
+					return openBranches.getTagDoc('repo1', '16.04.1');
+				})
+				.then((doc) => {
+					doc.tickets.should.have.lengthOf(2);
+					doc.tickets.should.contain("KD-8888");
+					doc.tickets.should.contain("KD-0 quick fix");
+
+					return openBranches.getTagDocsWithTickets('16.04.1', jira);
+				})
+				.then((docs) => {
+					docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
+
+					// we expect 2 repositories in the release
+					docs.should.contain.keys(['repo1', 'repo4']);
+
+					// no bug ticket expected for 16.01.1
+					docs['repo1'].tickets.bugfixes.should.have.lengthOf(0);
+
+					// all tickets are features
+					var features = docs['repo1'].tickets.features;
+					removeIds(features); // to compare with test data source
+					features.should.include.something.that.deep.equals(ticketsObj['KD-8888']);
+
+					features = docs['repo4'].tickets.features;
+					removeIds(features); // to compare with test data source
+					features.should.include.something.that.deep.equals(ticketsObj['KD-8889']);
+				});
 		});
 	});
 });

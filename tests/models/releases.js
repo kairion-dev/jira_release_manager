@@ -5,7 +5,7 @@ var
 	config = require('config'),
 	helper = require('../helper/common.js'),
 	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
-	releases = require('../../models/releases.js'); // ... so that models will work upon the corresponding databases (internally)
+	releases = require('../../models/tags.js')('release'); // ... so that models will work upon the corresponding databases (internally)
 
 chai.use(require('chai-things')); // to test array elements with chai
 
@@ -102,7 +102,7 @@ describe('Unit testing', function() {
 		it('Nothing in database, nothing should be returned', function() {
 			return drop('tags') // make sure db is empty
 				.then(() => {
-					return releases.getAllReleases();
+					return releases.getAllTags();
 				}) //TODO also test other releases.methods()
 				.then((docs) => {
 					docs.should.be.empty;
@@ -122,15 +122,15 @@ describe('Unit testing', function() {
 						docs.should.have.lengthOf(1);
 						checkSingleDoc(docs[0], item);
 						// get release through model
-						return releases.getRelease(item.repository, item.tag);
+						return releases.getTagDoc(item.repository, item.tag);
 					})
 					.then((release) => {
 						checkSingleDoc(release, item);
 					})
 			})
 		});
-		it('getRepoReleases() should only return repository specific releases', function() {
-			return releases.getRepoReleases('repo1')
+		it('getRepoTags() should only return repository specific releases', function() {
+			return releases.getRepoTags('repo1')
 				.then((docs) => {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
 
@@ -142,7 +142,7 @@ describe('Unit testing', function() {
 					docs.should.not.include.something.that.deep.equals(releases1[4]);
 					docs.should.not.include.something.that.deep.equals(releases1[5]);
 
-					return releases.getRepoReleases('repo2');
+					return releases.getRepoTags('repo2');
 				})
 				.then((docs) => {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
@@ -155,7 +155,7 @@ describe('Unit testing', function() {
 					docs.should.include.something.that.deep.equals(releases1[4]);
 					docs.should.include.something.that.deep.equals(releases1[5]);
 
-					return releases.getRepoReleases('repo3');
+					return releases.getRepoTags('repo3');
 				})
 				.then((docs) => {
 					removeIds(docs); // remove each doc id to have the exact same data as in the source
@@ -169,9 +169,9 @@ describe('Unit testing', function() {
 					docs.should.not.include.something.that.deep.equals(releases1[4]);
 				})
 		});
-		describe('getAllReleases()', function() {
+		describe('getAllTags()', function() {
 			it('commits should equal the aggregated commits for each tag', function() {
-				return releases.getAllReleases()
+				return releases.getAllTags()
 					.then((docs) => {
 						docs['16.01.1'].commits.should.equal(95);
 						docs['15.12.2'].commits.should.equal(13);
@@ -179,7 +179,7 @@ describe('Unit testing', function() {
 					});
 			});
 			it('last_commit_date should equal the latest commit within the tag', function() {
-				return releases.getAllReleases()
+				return releases.getAllTags()
 					.then((docs) => {
 						docs['16.01.1'].last_commit_date.should.equal("Fri Jan 29 16:01:23 2016 +0100");
 						docs['15.12.2'].last_commit_date.should.equal("Fri Dec 4 12:55:33 2015 +0100");
@@ -192,7 +192,7 @@ describe('Unit testing', function() {
 						array.should.contain(element);
 					});
 				};
-				return releases.getAllReleases()
+				return releases.getAllTags()
 					.then((docs) => {
 						docs['16.01.1'].tickets.should.have.lengthOf(7); // 3 (KD-xxxx) + 3 (KD-0) + 1 (KDO-xxx)
 						shouldContainElements(docs['16.01.1'].tickets, ["KD-0 bootup changes","KD-0 brain connect mode","KD-1111","KD-2222","KD-3333","KD-0 bugfix","KDO-111"]);
@@ -246,9 +246,9 @@ describe('Unit testing', function() {
 						tickets.should.not.include.something.that.deep.equals(ticketsObj['KD-1111']);
 					})
 			});
-			describe('getTagReleases()', function() {
+			describe('getTagDocsWithTickets()', function() {
 				it('correct structure', function() {
-					return releases.getTagReleases('15.12.2', jira)
+					return releases.getTagDocsWithTickets('15.12.2', jira)
 						.then((docs) => {
 							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
@@ -263,7 +263,7 @@ describe('Unit testing', function() {
 						})
 				});
 				it('features and bugfixes are separated correctly', function() {
-					return releases.getTagReleases('16.01.1', jira)
+					return releases.getTagDocsWithTickets('16.01.1', jira)
 						.then((docs) => {
 							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
@@ -286,7 +286,7 @@ describe('Unit testing', function() {
 
 							// TODO also check repo2 and repo3 in detail
 
-							return releases.getTagReleases('15.12.2', jira);
+							return releases.getTagDocsWithTickets('15.12.2', jira);
 						})
 						.then((docs) => {
 							docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
@@ -342,7 +342,7 @@ describe('Unit testing', function() {
 					.then((id) => {
 						id.should.not.be.empty;
 						elementId3 = id;
-						return releases.getTagReleases('15.12.2', jira);
+						return releases.getTagDocsWithTickets('15.12.2', jira);
 					})
 					.then((docs) => {
 						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
@@ -362,7 +362,7 @@ describe('Unit testing', function() {
 				.then((id) => {
 						id.should.not.be.empty; // we expect an id to identify the element later on
 						elementId4 = id; // temporary save this id
-						return releases.getTagReleases('15.12.2', jira);
+						return releases.getTagDocsWithTickets('15.12.2', jira);
 					})
 					.then((docs) => {
 						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
@@ -381,7 +381,7 @@ describe('Unit testing', function() {
 			});
 			it('remove status', function() {
 				return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId1)
-					.then(() => { return releases.getTagReleases('15.12.2', jira); })
+					.then(() => releases.getTagDocsWithTickets('15.12.2', jira))
 					.then((docs) => {
 						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 
@@ -396,7 +396,7 @@ describe('Unit testing', function() {
 
 						return releases.removeStatus('deploy', '15.12.2', 'repo1', elementId3)
 					})
-					.then(() => { return releases.getTagReleases('15.12.2', jira); })
+					.then(() => releases.getTagDocsWithTickets('15.12.2', jira))
 					.then((docs) => {
 						docs = helper.arrayToObject(docs, 'repo'); // to access the single repository more easy
 

@@ -10,7 +10,7 @@ var
 	GitHistory = require('../../lib/git.js').GitHistory,
 	moment = require('moment'),
 	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
-	releases = require('../../models/releases.js'); // ... so that models will work upon the corresponding databases (internally)
+	releases = require('../../models/tags.js')('release'); // ... so that models will work upon the corresponding databases (internally)
 
 chai.use(require('chai-things')); // to test array elements with chai
 

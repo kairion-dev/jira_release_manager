@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   router = express.Router(),
   log = require('../lib/logger.js'),
-  model = require('../models/releases.js');
+  model = require('../models/tags.js')('release');
 
 router.get('/repo/:repo', function(req, res, next) {
   model.getRepoReleases(req.params.repo)
@@ -27,7 +27,7 @@ router.get('/repo/:repo', function(req, res, next) {
 
 
 router.get('/plan', function(req, res, next) {
-  model.getAllReleases()
+  model.getAllTags()
     .then((releases) => {
       var templateVars = {
         title: 'Release Plans',
@@ -76,7 +76,7 @@ router.get('/plan/:tag/:repo/:type/remove/:id', function(req, res, next) {
 
 
 router.get('/plan/:tag', function(req, res, next) {
-  model.getTagReleases(req.params.tag, req.jira)
+  model.getTagDocsWithTickets(req.params.tag, req.jira)
     .then((releases) => {
       var statusClasses = {
         'Default': 'label label-default',
@@ -107,7 +107,7 @@ router.get('/plan/:tag', function(req, res, next) {
 
 
 router.get('/repo/:repo/:tag', function(req, res, next) {
-  model.getRelease(req.params.repo, req.params.tag)
+  model.getTagDoc(req.params.repo, req.params.tag)
     .then((release) => {
       var templateVariables = {
         title: 'Release ' + req.params.tag,

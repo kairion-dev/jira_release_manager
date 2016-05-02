@@ -6,7 +6,7 @@ var
   model = require('../models/tags.js')('release');
 
 router.get('/repo/:repo', function(req, res, next) {
-  model.getRepoReleases(req.params.repo)
+  model.getRepoTags(req.params.repo)
     .then((releases) => {
       var templateVars = {
         title: 'Releases',

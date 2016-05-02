@@ -11,7 +11,7 @@ var
   db = require('./lib/db.js').db(config);
 
 // load jira configs
-var jiraConfig = config.get('jira');
+var jiraConfig = JSON.parse(JSON.stringify(config.get('jira')));
 if (config.has('jira.oauth.consumer_secret')) {
   jiraConfig.oauth.consumer_secret = fs.readFileSync(config.get('jira.oauth.consumer_secret'), "utf8");
 }

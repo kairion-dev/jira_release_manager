@@ -2,12 +2,13 @@ var
   fs = require('fs'),
   OAuth = require('oauth').OAuth,
   readline = require('readline'),
-  request = require('request');
+  request = require('request'),
+  configFile = require('config');
 
 var config = {
   host: 'https://kairion.atlassian.net',
-  consumer: '',
-  consumer_secret: fs.readFileSync(process.env['HOME'] + '/.ssh/jira_rsa', "utf8")
+  consumer: configFile.get('jira.oauth.consumer_key'),
+  consumer_secret: fs.readFileSync(configFile.get('jira.oauth.consumer_secret'), "utf8")
 };
 
 var consumer =

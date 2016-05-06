@@ -52,8 +52,9 @@ describe('check repository initializing for tags', function() {
 			.then((tags) => db.tags.findAsync({ type: 'release' }))
 			.then((docs) => {
 				// should contain two tickets from the commits
-				docs.should.have.lengthOf(1);
-				var doc = docs[0];
+				docs.should.have.lengthOf(2); // master and 16.01.1
+				docs = helper.arrayToObject(docs, 'tag');
+				var doc = docs['16.01.1'];
 				doc.tag.should.equal('16.01.1');
 				doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-3333');
@@ -67,7 +68,7 @@ describe('check repository initializing for tags', function() {
 			.then(() => git.initialize()) // init git again to load updates in the repository
 			.then(() => db.tags.findAsync({ type: 'release' }))
 			.then((docs) => {
-				docs.should.have.lengthOf(2);
+				docs.should.have.lengthOf(3); // master, 16.01.1, 16.01.2
 				docs = helper.arrayToObject(docs, 'tag');
 				// should contain the same values as before
 				var doc = docs['16.01.1'];
@@ -92,6 +93,7 @@ describe('check repository initializing for tags', function() {
 			.then(() => git.initialize()) // init git again to load updates in the repository
 			.then(() => db.tags.findAsync({ type: 'release' }))
 			.then((docs) => {
+				docs.should.have.lengthOf(4); // master, 16.01.1, 16.01.2, 16.01.3
 				docs = helper.arrayToObject(docs, 'tag');
 				var doc = docs['16.01.3'];
 				doc.tag.should.equal('16.01.3');
@@ -100,13 +102,6 @@ describe('check repository initializing for tags', function() {
 				doc.tickets.should.contain('KD-6666');
 				doc.commits.should.equal(3); // 2 commits + initial commit
 			});
-	});
-});
-
-
-describe('check next release', function() {
-	it.skip('todo', function() {
-
 	});
 });
 
@@ -142,7 +137,7 @@ describe('check repository initializing for open branches', function() {
 				docs.feature3.tickets.should.contain('KD-4444');
 			})
 	});
-	it.skip('should contain only feature1 and feature3 as open branches cause feature2 was closed', function() {
+	it.skip('should only contain feature1 and feature3 as open branches cause feature2 was closed', function() {
 		return Generator.mergeBranches('develop', 'feature/feature2', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:20:00').unix(), 120))
 			// .then(() => db['tags'].removeAsync({ type: 'branch' }, { multi: true })) // currently only works when removing the branches from tags database
 			.then(() => git.initialize())
@@ -157,10 +152,10 @@ describe('check repository initializing for open branches', function() {
 				docs.feature3.tickets.should.contain('KD-4444');
 			});
 	});
-	it.skip('test with another closed feautre', function() {
+	it.skip('test with another closed feature', function() {
 		//TODO
 	});
-	it.skip('test whats happens when a release tage is generated', function() {
+	it.skip('test whats happens when a release tag is generated', function() {
 		//TODO
 		// .then((commitId) => Generator.repo.createTag(commitId, '16.01.1', 'Message for tag: 16.01.1'))
 	});
@@ -203,5 +198,81 @@ describe('test git log and message parsing', function() {
 				commits[commitId.tabs].message.should.equal('\t\t and also \t tabs');
 				commits[commitId.quotes].message.should.equal('"quotes" should not " break "" anything');
 			});
+	});
+});
+
+
+describe('check next release', function() {
+	before(function() {
+		var branches = [ 'develop', 'feature/feature1', 'feature/feature2', 'feature/feature3' ];
+		return db['tags'].removeAsync({}, { multi: true })
+			.then(() => Generator.init(branches, Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 00:00:00').unix(), 120)))
+			.then(() => Generator.switchToBranch('feature/feature1'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 01:04:00').unix(), 120), 'KD-1111 commit message 1'))
+			.then(() => Generator.mergeBranches('develop', 'feature/feature1', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:10:00').unix(), 120)))
+			.catch((e) => {
+				console.log(e);
+			})
+	})
+	it('ticket from feature1 should be in next release', function() {
+		return git.initialize()
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(1);
+				docs = helper.arrayToObject(docs, 'tag');
+				var nextRelease = docs['Next Release'];
+				nextRelease.tickets.should.have.lengthOf(1);
+				nextRelease.tickets.should.contain('KD-1111');
+			})
+	});
+	it('still should be one ticket in next release cause feature2 is not merged yet', function() {
+		return Generator.switchToBranch('feature/feature2')
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 02:02:20').unix(), 120), 'KD-2222 commit message 2'))
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 03:03:30').unix(), 120), 'KD-3333 commit message 3'))
+			.then(() => git.initialize())
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(1);
+				docs = helper.arrayToObject(docs, 'tag');
+				var nextRelease = docs['Next Release'];
+				nextRelease.tickets.should.have.lengthOf(1);
+				nextRelease.tickets.should.contain('KD-1111');
+			})
+	});
+	it('after merging feature2 there should be three tickets now', function() {
+		return Generator.mergeBranches('develop', 'feature/feature2') // now merge feature2
+			.then(() => git.initialize())
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(1);
+				docs = helper.arrayToObject(docs, 'tag');
+				var nextRelease = docs['Next Release'];
+				nextRelease.tickets.should.have.lengthOf(3);
+				nextRelease.tickets.should.contain('KD-1111');
+				nextRelease.tickets.should.contain('KD-2222');
+				nextRelease.tickets.should.contain('KD-3333');
+			})
+	});
+	it('next release should be empty after release', function() {
+		return Generator.mergeBranches('master', 'develop') // as soon as develop is merged in master the release is complete
+			.then(() => git.initialize())
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(0);
+			})
+	});
+	it('next release should only show new changes from feature3', function() {
+		return Generator.switchToBranch('feature/feature3')
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'))
+			.then(() => Generator.mergeBranches('develop', 'feature/feature3'))
+			.then(() => git.initialize())
+			.then((tags) => db.tags.findAsync({ type: 'release' }))
+			.then((docs) => {
+				docs.should.have.lengthOf(1);
+				docs = helper.arrayToObject(docs, 'tag');
+				var nextRelease = docs['Next Release'];
+				nextRelease.tickets.should.have.lengthOf(1);
+				nextRelease.tickets.should.contain('KD-4444');
+			})
 	});
 });

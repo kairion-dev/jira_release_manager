@@ -35,3 +35,6 @@ start.sh
 sync_back.sh
 tags
 tickets
+
+# Data used for testing
+tests/data

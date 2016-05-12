@@ -3,7 +3,7 @@ var
   Promise = require('bluebird'),
   router = express.Router(),
   log = require('../lib/logger.js'),
-  model = require('../models/open-branches.js');
+  model = require('../models/tags.js')('branch');
 
 
 router.get('/', function(req, res, next) {
@@ -12,7 +12,7 @@ router.get('/', function(req, res, next) {
     menuSelected: 'menu-open-branches'
   };
 
-  model.getAllOpenBranches()
+  model.getAggregatedTags()
     .then((branches) => {
       templateVars.branches = branches;
       res.render('openBranches/index', templateVars);
@@ -27,7 +27,7 @@ router.get('/', function(req, res, next) {
 });
 
 router.get('/repo/:repo/:tag', function(req, res, next) {
-  model.getOpenBranch(req.params.tag, req.params.repo)
+  model.getTagDoc(req.params.repo, req.params.tag)
     .then((doc) => {
       var templateVariables = {
         title: 'Branch ' + req.params.tag,
@@ -49,6 +49,7 @@ router.get('/repo/:repo/:tag', function(req, res, next) {
           });
       }
       else {
+        templateVariables.repo = req.params.repo;
         res.render('releases/notFound', templateVariables);
       }
     })
@@ -62,10 +63,7 @@ router.get('/repo/:repo/:tag', function(req, res, next) {
 });
 
 router.get('/:branch', function(req, res, next) {
-  model.getOpenBranches(req.params.branch)
-    .then((docs) => {
-      return model.enrichOpenBranchesWithTickets(docs, req.jira);
-    })
+  model.getTagDocsWithTickets(req.params.branch, req.jira)
     .then((branches) => {
       var templateVars = {
         title: 'Open branch ' + req.params.branch,

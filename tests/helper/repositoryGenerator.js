@@ -26,6 +26,10 @@ class RepositoryGenerator {
 			.then((ref) => this.repo.checkoutBranch(ref))
 	}
 
+	mergeBranches(to, from, author) {
+		return this.repo.mergeBranches(to, from, author); // , author, Git.Merge.PREFERENCE.NONE, new Git.MergeOptions()
+	}
+
 	createCommit(files, author, message) {
 		return this.repo.createCommitOnHead(files, author, author, message);
 	}
@@ -60,45 +64,3 @@ class RepositoryGenerator {
 }
 
 module.exports.RepositoryGenerator = RepositoryGenerator;
-
-
-// Generator.clearRepository()
-// 	.then(() => Generator.init())
-// 	.then(() => {
-// 		Generator.repo.getBranch('develop');
-// 	})
-// 	.catch((e) => {
-// 		console.log(e);
-// 	})
-
-// Promise.resolve()
-	// .then(generator.clearRepository)
-	// .then(generator.init)
-	// .catch((e) => {
-	// 	console.log(e);
-	// })
-
-// Promise.resolve(path)
-// 	.then(clearRepository)
-// 	.then(init)
-// 	// .then()
-// // 	// .then((branches) => {
-// // 	// 	console.log('hier');
-// // 	// 	return;
-// // 	// 		// 		.then((ref) => {
-// // 	// 		// 	return repo.checkoutBranch(ref, new Git.CheckoutOptions());
-// // 	// 		// })
-// // 	// 		// .then(() => {
-// // 	// 		// 	return repo.createCommitOnHead([ file2 ], author, author, 'commit message 2')
-// // 	// 		// })
-// // 	// })
-// // 	// 	return repo.createBranch('branch1', 'commit1', true, author, 'my log message');
-// // 	// })
-// // 	// .then((ref) => {
-// // 	// 	console.log(ref);
-// // 	// 	console.log(geklappt);
-// // 	// })
-// 	.catch((e) => {
-// 		console.log(e);
-// 		// throw new Error('err', e);
-// 	})

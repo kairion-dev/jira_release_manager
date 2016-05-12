@@ -5,8 +5,8 @@ log:
   level: 'info'
   filename: '/tmp/jrm.log'
 databases:
-  tags: './tags'
-  tickets: './tickets'
+  tags: 'tests/data/temp-dbs/tags'
+  tickets: 'tests/data/temp-dbs/tickets'
 jira:
   host: 'kairion.atlassian.net'
   epicsKey: 'customfield_10500'
@@ -22,9 +22,6 @@ jira:
 git:
   featurePrefix: 'refs/heads/feature/'
   repositories:
-    brain:
-      path: '/home/mwick/kairion/brain.git'
-      name: 'brain'
-    esc:
-      path: '/home/mwick/kairion/esc.git'
-      name: 'esc'
+    testgit:
+      path: './tests/data/repositories/testrepo1/.git'
+      name: 'testgit'

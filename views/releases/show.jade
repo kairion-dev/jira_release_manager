@@ -24,33 +24,34 @@ block content
 
   h2.sub-header Tickets
   each ticket in tickets
-    .ticket.row
-      .col-xs-6.col-sm-3 Key:
-      .col-xs-6.col-sm-3
-        a(href='https://kairion.atlassian.net/browse/' + ticket.key)=ticket.key
-      .col-xs-6.col-sm-3 Status:
-      .col-xs-6.col-sm-3= ticket.status
-      .col-xs-6.col-sm-3 Summary:
-      .col-xs-18.col-sm-9= ticket.summary
-      .col-xs-6.col-sm-3 Issue Type:
-      .col-xs-6.col-sm-3= ticket.issueType
-      .col-xs-6.col-sm-3 Assignee:
-      .col-xs-6.col-sm-3= ticket.assignee
-      if ticket.components.length > 0
-        .col-xs-6.col-sm-3 Components:
-        .col-xs-6.col-sm-3= ticket.components.join(', ')
-      if ticket.parent
-        .col-xs-6.col-sm-3 Parent:
-        .col-xs-6.col-sm-3= ticket.parent
-      if ticket.epic
-        .col-xs-6.col-sm-3 Epic:
-        .col-xs-6.col-sm-3= ticket.epic
-      if ticket.newCap
-        .col-xs-6.col-sm-3 NewCap:
-        .col-xs-18.col-sm-9= ticket.newCap
-      if ticket.children && ticket.children.length > 0
-        .col-xs-6.col-sm-3 Children:
-        .col-xs-18.col-sm-9
-          +childs(ticket.children)
+    .ticket
+      .row
+        .col-xs-6.col-sm-3 Key:
+        .col-xs-6.col-sm-3
+          a(href='https://kairion.atlassian.net/browse/' + ticket.key)=ticket.key
+        .col-xs-6.col-sm-3 Status:
+        .col-xs-6.col-sm-3= ticket.status
+        .col-xs-6.col-sm-3 Summary:
+        .col-xs-18.col-sm-9= ticket.summary
+        .col-xs-6.col-sm-3 Issue Type:
+        .col-xs-6.col-sm-3= ticket.issueType
+        .col-xs-6.col-sm-3 Assignee:
+        .col-xs-6.col-sm-3= ticket.assignee
+        if ticket.components.length > 0
+          .col-xs-6.col-sm-3 Components:
+          .col-xs-6.col-sm-3= ticket.components.join(', ')
+        if ticket.parent
+          .col-xs-6.col-sm-3 Parent:
+          .col-xs-6.col-sm-3= ticket.parent
+        if ticket.epic
+          .col-xs-6.col-sm-3 Epic:
+          .col-xs-6.col-sm-3= ticket.epic
+        if ticket.newCap
+          .col-xs-6.col-sm-3 NewCap:
+          .col-xs-18.col-sm-9= ticket.newCap
+        if ticket.children && ticket.children.length > 0
+          .col-xs-6.col-sm-3 Children:
+          .col-xs-18.col-sm-9
+            +childs(ticket.children)
 
 

@@ -25,3 +25,9 @@ git:
     testgit:
       path: './tests/data/repositories/testrepo1/.git'
       name: 'testgit'
+webhooks:
+  jira:
+    update-ticket:
+      path: '../webhooks/update-ticket'
+      params:
+        dbName: 'tickets'

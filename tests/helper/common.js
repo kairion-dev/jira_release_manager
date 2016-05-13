@@ -23,3 +23,17 @@ module.exports.arrayToObject = function arrayToObject(array, key) {
 		return obj;
 	}, {});
 }
+
+/**
+ * Removes the parameter '_id' from the given docs.
+ * Use this method to easily compare objects returned by a database which has a doc structure similar to MongoDB.
+ * @param  {MongoDB Docs} docs
+ */
+module.exports.removeIds = function removeIds(docs) {
+	docs.map((doc) => {
+		delete doc._id; // remove each doc id to have the exact same data as in the source
+		if (doc.children) {
+			removeIds(doc.children); // also remove for each child if we have
+		}
+	});
+}

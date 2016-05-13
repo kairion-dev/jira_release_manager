@@ -62,15 +62,6 @@ function generateKDZeroTicket(issueKey, zeroCounter) {
   };
 }
 
-function removeIds(docs) {
-	docs.map((doc) => {
-		delete doc._id; // remove each doc id to have the exact same data as in the source
-		if (doc.children) {
-			removeIds(doc.children); // also remove for each child if we have
-		}
-	});
-}
-
 before(function() {
 
 });
@@ -119,7 +110,7 @@ describe('Unit testing', function() {
 			return insert('tags', tags1, true)
 				.then(() => releases.getRepoTags('repo1')) // get releases for repo1 which should not contain any open branch
 				.then((docs) => {
-					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					helper.removeIds(docs); // remove each doc id to have the exact same data as in the source
 					docs.should.have.lengthOf(2);
 					docs.should.include.something.that.deep.equals(tags1[0]);
 					docs.should.include.something.that.deep.equals(tags1[3]);
@@ -127,7 +118,7 @@ describe('Unit testing', function() {
 					return openBranches.getRepoTags('repo1'); // get open branches for repo1 which should not contain any releases
 				})
 				.then((docs) => {
-					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					helper.removeIds(docs); // remove each doc id to have the exact same data as in the source
 					docs.should.have.lengthOf(1);
 					docs.should.include.something.that.deep.equals(tags1[6]);
 				});
@@ -157,7 +148,7 @@ describe('Unit testing', function() {
 		it('getRepoTags() should only return repository specific releases', function() {
 			return releases.getRepoTags('repo1')
 				.then((docs) => {
-					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					helper.removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(2);
 					docs.should.include.something.that.deep.equals(tags1[0]);
@@ -170,7 +161,7 @@ describe('Unit testing', function() {
 					return releases.getRepoTags('repo2');
 				})
 				.then((docs) => {
-					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					helper.removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(3);
 					docs.should.not.include.something.that.deep.equals(tags1[0]);
@@ -183,7 +174,7 @@ describe('Unit testing', function() {
 					return releases.getRepoTags('repo3');
 				})
 				.then((docs) => {
-					removeIds(docs); // remove each doc id to have the exact same data as in the source
+					helper.removeIds(docs); // remove each doc id to have the exact same data as in the source
 
 					docs.should.have.lengthOf(1);
 					docs.should.not.include.something.that.deep.equals(tags1[0]);
@@ -244,7 +235,7 @@ describe('Unit testing', function() {
 			it('getTickets()', function() {
 				return releases.getTickets(tags1[0], jira)
 					.then((tickets) => {
-						removeIds(tickets);
+						helper.removeIds(tickets);
 						// should include the 'normal' tickets
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-3333']);
@@ -259,7 +250,7 @@ describe('Unit testing', function() {
 						return releases.getTickets(tags1[1], jira);
 					})
 					.then((tickets) => {
-						removeIds(tickets);
+						helper.removeIds(tickets);
 						// should include the 'normal' tickets
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 						tickets.should.include.something.that.deep.equals(ticketsObj['KDO-111']);
@@ -300,7 +291,7 @@ describe('Unit testing', function() {
 
 							// all tickets are features
 							var features = docs['repo1'].tickets.features;
-							removeIds(features); // to compare with test data source
+							helper.removeIds(features); // to compare with test data source
 
 							features.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 							features.should.include.something.that.deep.equals(ticketsObj['KD-3333']);
@@ -322,12 +313,12 @@ describe('Unit testing', function() {
 							// 1 bug ticket expected for 15.12.2
 							docs['repo1'].tickets.bugfixes.should.have.lengthOf(1);
 							var bugfixes = docs['repo1'].tickets.bugfixes;
-							removeIds(bugfixes);
+							helper.removeIds(bugfixes);
 							bugfixes.should.include.something.that.deep.equals(ticketsObj['KD-4444']);
 							// 1 feature ticket expected for 15.12.2
 							docs['repo1'].tickets.features.should.have.lengthOf(1);
 							var features = docs['repo1'].tickets.features;
-							removeIds(features);
+							helper.removeIds(features);
 							features.should.include.something.that.deep.equals(ticketsObj['KD-5555']);
 
 							// no feature ticket for repo2 ...
@@ -335,7 +326,7 @@ describe('Unit testing', function() {
 							// ... but 1 bug ticket
 							docs['repo2'].tickets.bugfixes.should.have.lengthOf(1);
 							var bugfixes2 = docs['repo2'].tickets.bugfixes;
-							removeIds(bugfixes2);
+							helper.removeIds(bugfixes2);
 							bugfixes2.should.include.something.that.deep.equals(ticketsObj['KD-4444']);
 						});
 				});
@@ -472,11 +463,11 @@ describe('Unit testing', function() {
 
 					// all tickets are features
 					var features = docs['repo1'].tickets.features;
-					removeIds(features); // to compare with test data source
+					helper.removeIds(features); // to compare with test data source
 					features.should.include.something.that.deep.equals(ticketsObj['KD-8888']);
 
 					features = docs['repo4'].tickets.features;
-					removeIds(features); // to compare with test data source
+					helper.removeIds(features); // to compare with test data source
 					features.should.include.something.that.deep.equals(ticketsObj['KD-8889']);
 				});
 		});

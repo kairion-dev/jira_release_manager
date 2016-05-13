@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var routes = require('./routes/index');
 var releases = require('./routes/releases');
 var openBranches = require('./routes/openBranches');
+var webhooks = require('./routes/webhooks');
 
 
 function init(jira) {
@@ -40,6 +41,7 @@ function init(jira) {
   app.use('/', routes);
   app.use('/releases', releases);
   app.use('/openBranches', openBranches);
+  app.use('/webhooks', webhooks);
 
 // catch 404 and forward to error handler
   app.use(function(req, res, next) {

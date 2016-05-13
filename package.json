@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node index.js",
     "postinstall": "./node_modules/bower/bin/bower install",
-    "test": "npm run test-models && npm run test-startup",
+    "test": "npm run test-models && npm run test-startup && npm run test-webhooks",
     "test-models": "./node_modules/mocha/bin/mocha tests/models/releases.js",
-    "test-startup": "./node_modules/mocha/bin/mocha tests/startup/tags.js"
+    "test-startup": "./node_modules/mocha/bin/mocha tests/startup/tags.js",
+    "test-webhooks": "./node_modules/mocha/bin/mocha tests/webhooks/webhook-engine.js"
   },
   "author": "Karl Fritsche <karl.fritsche@kairion.de>",
   "contributors": [

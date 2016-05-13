@@ -9,8 +9,6 @@ var
 	WebhookEngine = require('../../webhooks/webhook-engine.js'),
 	helper = require('../helper/common.js');
 
-// chai.use(require('chai-things')); // to test array elements with chai
-
 var webhookPaths = {
 	'helloWorld' : { path: '../tests/webhooks/webhooks/hello-world'},
 	'calc_add' : { path: '../tests/webhooks/webhooks/calculator', params: { operation: function(a,b) { return a + b } }}

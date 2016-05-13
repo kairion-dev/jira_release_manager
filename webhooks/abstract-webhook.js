@@ -11,6 +11,7 @@ class Webhook {
 	 *   Is required to identify the webhook within the engine
 	 * @param  {Object} params
 	 *   Additional parameter to work with - such as databases or configs
+	 *   Parameters are automatically added to be used by the webhook that extends this class.
 	 */
 	constructor(id, params) {
 		this.id = id; 

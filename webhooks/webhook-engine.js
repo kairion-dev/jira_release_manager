@@ -15,6 +15,7 @@ class WebhookEngine {
 	 * @param  {Object} configWebhooks
 	 *   Object that holds the config for all webhooks that should be registered. The structure must look like
 	 *   { 'webhookId1': { path: '../my/path', params: { 'some': 'parameters'} } }
+	 *   The params properties are automatically added by the abstract webhook constructor and available in the specific webhook.
 	 * @return {Promise}
 	 */
 	registerByConfig(configWebhooks) {

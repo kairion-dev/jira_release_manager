@@ -6,9 +6,14 @@ var
   config = require('config'),
   WebhookEngine = require('../webhooks/webhook-engine');
 
-// init webhook engine and register webhooks by using the config
+
+// init webhook engine and register webhooks
 var engine = new WebhookEngine();
-engine.registerByConfig(config.get('webhooks.jira'));
+engine.registerByConfig(
+	config.get('webhooks.jira'),
+	{ epicsKey: config.get('jira.epicsKey'), newCapKey: config.get('jira.newCapKey')}
+);
+
 
 // receive webhook request
 router.post('/jira', function(req, res, next) {

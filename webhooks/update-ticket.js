@@ -60,14 +60,19 @@ class UpdateTicket extends Webhook {
 			dbDoc.assignee = issue.fields.assignee.displayName;
 		}
 		if (issue.fields.components) {
-			dbDoc.components = issue.fields.components;
-		}
-		if (issue.fields.parent) {
-			dbDoc.parent = issue.fields.parent;
-		}
-		if (issue.fields.newCap) {
-			dbDoc.newCap = issue.fields.newCap;
-		}
+      issue.fields.components.forEach((component) => {
+        dbDoc.components.push(component.name);
+      });
+    }
+    if (issue.fields.parent && issue.fields.parent.key) {
+      dbDoc.parent = issue.fields.parent.key;
+    }
+    if (this.params.epicsKey && issue.fields[this.params.epicsKey]) {
+      dbDoc.parent = issue.fields[this.params.epicsKey];
+    }
+		if (this.params.newCapKey && issue.fields[this.params.newCapKey]) {
+      dbDoc.newCap = issue.fields[this.params.newCapKey];
+    }
 
 		return db[this.params.dbName].updateAsync({key: issueKey}, {$set: dbDoc});
 	}

@@ -90,7 +90,7 @@ describe('Testing Webhooks', function() {
 		{"key":"KD-1111","project":"KD","summary":"ai doc-update","status":"In work","issueType":"Development","assignee":"Tomasz Porst","components":[],"parent":false,"newCap":false},
 	];
 
-	before(function() {
+	beforeEach(function() {
 		return db.tickets.removeAsync({}, { multi: true })
 			.then(() => {
 				return Promise.map(tickets1, (ticket) => {
@@ -186,5 +186,41 @@ describe('Testing Webhooks', function() {
 					docs.should.contain.deep(ticket);
 				})
 		});
+		it('Updating epicsKey defined by customfield should work', function() {
+			return engine.registerByConfig(config, { epicsKey: 'customfield_10500'})
+				.then(() => engine.invoke({
+					webhookEvent: 'jira:issue_updated',
+					issue: {
+						key: 'KD-1111',
+						fields: {
+							customfield_wrong_key: 'KD-2222'
+						}
+					}
+				}))
+				// nothing should be changed cause epicsKey customfield key was not recognized
+				.then(() => db.tickets.findAsync({}))
+				.then((docs) => {
+					docs.should.have.lengthOf(1);
+					helper.removeIds(docs);
+					docs.should.contain.deep(tickets1[0]);
+				})
+				.then(() => engine.invoke({
+					webhookEvent: 'jira:issue_updated',
+					issue: {
+						key: 'KD-1111',
+						fields: {
+							customfield_10500: 'KD-2222'
+						}
+					}
+				}))
+				// now the key fits so we should have KD-2222 as new parent to KD-1111
+				.then(() => db.tickets.findAsync({}))
+				.then((docs) => {
+					docs.should.have.lengthOf(1);
+					let doc = docs[0];
+					doc.should.have.property('parent');
+					doc.parent.should.equal('KD-2222');
+				})
+		})
 	});
 });

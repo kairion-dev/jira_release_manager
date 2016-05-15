@@ -16,13 +16,22 @@ class WebhookEngine {
 	 *   Object that holds the config for all webhooks that should be registered. The structure must look like
 	 *   { 'webhookId1': { path: '../my/path', params: { 'some': 'parameters'} } }
 	 *   The params properties are automatically added by the abstract webhook constructor and available in the specific webhook.
+	 * @param  {Object} params
+	 *   Additional parameters that are added to each config taken from configWebhooks. This way you can add params subsequently.
 	 * @return {Promise}
 	 */
-	registerByConfig(configWebhooks) {
+	registerByConfig(configWebhooks, params) {
 		return Promise.map(Object.keys(configWebhooks), (id) => {
+			// var config = JSON.parse(JSON.stringify(configWebhooks[id]));
 			var config = configWebhooks[id];
+			// append additional params to existing ones
+			params = Object.keys(params || {}).reduce((results, key) => {
+				results[key] = params[key];
+				return results;
+			}, config.params);
+			// load module and register it with the id and config.params
 			var Webhook = require(config.path);
-			return this.register(new Webhook(id, config.params));
+			return this.register(new Webhook(id, params));
 		});
 	}
 

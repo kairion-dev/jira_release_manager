@@ -27,7 +27,7 @@ class RepositoryGenerator {
 	}
 
 	mergeBranches(to, from, author) {
-		return this.repo.mergeBranches(to, from, author); // , author, Git.Merge.PREFERENCE.NONE, new Git.MergeOptions()
+		return this.repo.mergeBranches(to, from, author);
 	}
 
 	createCommit(files, author, message) {

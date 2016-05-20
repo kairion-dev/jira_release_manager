@@ -245,10 +245,7 @@ describe('check repository initializing for open branches', function() {
 			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 02:02:20').unix(), 120), 'KD-2222 commit message 2'))
 			.then(() => Generator.switchToBranch('feature/feature3'))
 			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 03:03:30').unix(), 120), 'KD-3333 commit message 3'))
-			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'))
-			.catch((e) => {
-				console.log(e);
-			})
+			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 04:04:40').unix(), 120), 'KD-4444 commit message 4'));
 	})
 	it('should contain all three branches cause none of them was closed', function() {
 		return git.initialize()
@@ -263,7 +260,7 @@ describe('check repository initializing for open branches', function() {
 				docs.feature3.commits.should.equal(2);
 				docs.feature3.tickets.should.contain('KD-3333');
 				docs.feature3.tickets.should.contain('KD-4444');
-			})
+			});
 	});
 	it('should only contain feature1 and feature3 as open branches cause feature2 was closed', function() {
 		return Generator.mergeBranches('develop', 'feature/feature2')

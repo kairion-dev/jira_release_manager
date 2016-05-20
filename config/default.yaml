@@ -31,3 +31,6 @@ webhooks:
       path: '../webhooks/update-ticket'
       params:
         dbName: 'tickets'
+  bitbucket:
+    create-tag:
+      path: '../webhooks/create-tag'

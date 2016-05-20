@@ -61,10 +61,10 @@ class WebhookEngine {
 			if (webhook.shouldBeExecuted(request)) {
 				return webhook.invoke(request)
 					.then((res) => {
-						return { id: webhook.id, result: res };
+						return { id: webhook.id, success: true, result: res };
 					})
 					.catch((e) => {
-						log.warn("Execution warning for '" + webhook.id + "': " + e);
+						return { id: webhook.id, success: false, error: e };
 					});
 			}
 		});

@@ -23,7 +23,7 @@ class RepositoryGenerator {
 
 	switchToBranch(name) {
 		return this.repo.getBranch(name)
-			.then((ref) => this.repo.checkoutBranch(ref))
+			.then((ref) => this.repo.checkoutBranch(ref));
 	}
 
 	mergeBranches(to, from, author) {
@@ -42,9 +42,37 @@ class RepositoryGenerator {
 			})
 	}
 
-	init(branches, author) {
+	createRemote(remoteUrl) {
+		this.remote = Git.Remote.create(this.repo, "origin", remoteUrl);
+		return Promise.resolve(this.remote);
+	}
+
+	push(branch) {
+		return this.remote.push(["refs/heads/" + branch + ":refs/heads/" + branch]);
+	}
+
+	pull(branch) {
+		return this.repo.fetchAll()
+			.then(() => this.repo.mergeBranches(branch, 'origin/' + branch));
+	}
+
+	initOnly(isBare) {
+		isBare = isBare || 0;
 		return this.clearRepository()
-			.then(() => Git.Repository.init(this.path, 0))
+			.then(() => Git.Repository.init(this.path, isBare))
+			.then((repo) => {
+				this.repo = repo;
+				return repo.openIndex();
+			})
+			.then((index) => {
+				return index.writeTree();
+			})
+	}
+
+	init(branches, author, isBare) {
+		isBare = isBare || 0;
+		return this.clearRepository()
+			.then(() => Git.Repository.init(this.path, isBare))
 			.then((repo) => {
 				this.repo = repo;
 				return repo.openIndex();

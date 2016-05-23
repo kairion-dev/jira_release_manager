@@ -23,7 +23,7 @@ describe('Testing Webhook Engine', function() {
 	describe('Basics', function() {
 		it('Webhook engine should start up and work without any error', function() {
 			let Webhook = require('./webhooks/hello-world');
-			engine.register(new Webhook('webhook1'))
+			return engine.register(new Webhook('webhook1'))
 			  .then(() => engine.invoke('Hello World'))
 				.then((results) => {
 					results.should.have.lengthOf(1);
@@ -32,7 +32,7 @@ describe('Testing Webhook Engine', function() {
 		});
 		it('Webhook engine should also work fine by passing webhooks via constructor config', function() {
 			let config = { 'helloWorld': webhookPaths.helloWorld };
-			engine.registerByConfig(config)
+			return engine.registerByConfig(config)
 				.then(() => engine.invoke('Hello World by config'))
 				.then((results) => {
 					results.should.have.lengthOf(1);
@@ -43,7 +43,7 @@ describe('Testing Webhook Engine', function() {
 	describe('Webhook structure and logic', function() {
 		it('Data passed by webhook constructor should be processed', function() {
 			let Webhook = require('./webhooks/hello-world');
-			engine.register(new Webhook('webhook1', { prefix: 'Prefix before Hello World: ' }))
+			return engine.register(new Webhook('webhook1', { prefix: 'Prefix before Hello World: ' }))
 			  .then(() => engine.invoke('Hello World'))
 				.then((results) => {
 					results.should.have.lengthOf(1);
@@ -52,7 +52,7 @@ describe('Testing Webhook Engine', function() {
 		});
 		it('Webhook should not be invoked', function() {
 			let Webhook = require('./webhooks/hello-world');
-			engine.register(new Webhook('webhook1'))
+			return engine.register(new Webhook('webhook1'))
 				// HelloWorldWebhook should be not executed when request equals 'dont execute'
 			  .then(() => engine.invoke('dont execute'))
 				.then((results) => {
@@ -67,7 +67,7 @@ describe('Testing Webhook Engine', function() {
 
 			let request = { a: 5, b: 3 };
 
-			engine.registerByConfig(config) // register two webhooks by using the config
+			return engine.registerByConfig(config) // register two webhooks by using the config
 				.then(() => engine.register(calcMult)) // and add another one manually
 				.then(() => engine.invoke(request))
 				.then((results) => {

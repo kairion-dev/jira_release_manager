@@ -27,7 +27,7 @@ class Webhook {
  *   true if the webhook should be executed, false otherwise
  */
 	shouldBeExecuted(data) {
-		return true; // by default the webhook is invoked
+		return Promise.resolve(true); // by default the webhook is invoked
 	}
 
 /**

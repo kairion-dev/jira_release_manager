@@ -16,7 +16,7 @@ class CreateTag extends Webhook {
 	 * @return {Boolean}
 	 */
 	shouldBeExecuted(data) {
-		return data && data.push;
+		return Promise.resolve(data && data.push);
 	};
 
 	invoke(data) {

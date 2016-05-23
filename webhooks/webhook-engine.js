@@ -2,6 +2,7 @@
 
 var
   Promise = require('bluebird'),
+  AbstractWebhook = require('./abstract-webhook'),
   log = require('../lib/logger.js');
 
 class WebhookEngine {
@@ -41,6 +42,9 @@ class WebhookEngine {
 	 * @return {Promise}
 	 */
 	register(webhook) {
+		if (!(webhook instanceof AbstractWebhook)) {
+			return Promise.reject("The given webhook must be an instance of AbstractWebhook");
+		};
 		if (Object.keys(this.webhooks).indexOf(webhook.id) == -1) {
 			return Promise.resolve(this.webhooks[webhook.id] = webhook);
 		} else {
@@ -58,15 +62,18 @@ class WebhookEngine {
 	invoke(request) {
 		return Promise.map(Object.keys(this.webhooks), (key) => {
 			let webhook = this.webhooks[key];
-			if (webhook.shouldBeExecuted(request)) {
-				return webhook.invoke(request)
-					.then((res) => {
-						return { id: webhook.id, success: true, result: res };
-					})
-					.catch((e) => {
-						return { id: webhook.id, success: false, error: e };
-					});
-			}
+			return webhook.shouldBeExecuted(request)
+				.then((execute) => {
+					if (execute) {
+						return webhook.invoke(request)
+							.then((res) => {
+								return { id: webhook.id, success: true, result: res };
+							})
+							.catch((e) => {
+								return { id: webhook.id, success: false, error: e };
+							});
+					}
+				})
 		});
 	}
 

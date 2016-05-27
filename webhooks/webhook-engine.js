@@ -46,7 +46,8 @@ class WebhookEngine {
 			return Promise.reject("The given webhook must be an instance of AbstractWebhook");
 		};
 		if (Object.keys(this.webhooks).indexOf(webhook.id) == -1) {
-			return Promise.resolve(this.webhooks[webhook.id] = webhook);
+			return Promise.resolve(this.webhooks[webhook.id] = webhook)
+				.then(() => this.webhooks[webhook.id].init());
 		} else {
 			return Promise.reject("Could not register '" + webhook.id + "' because a webhook already exists with same id.");
 		}
@@ -69,11 +70,11 @@ class WebhookEngine {
 							.then((res) => {
 								return { id: webhook.id, success: true, result: res };
 							})
-							.catch((e) => {
-								return { id: webhook.id, success: false, error: e };
-							});
 					}
 				})
+				.catch((e) => {
+					return { id: webhook.id, success: false, error: e };
+				});
 		});
 	}
 

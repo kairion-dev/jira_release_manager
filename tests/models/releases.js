@@ -4,7 +4,7 @@ var
 	Promise = require('bluebird'),
 	config = require('config'),
 	helper = require('../helper/common.js'),
-	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
+	db = require('../../lib/db.js').db(),
 	releases = require('../../models/tags.js')('release'), // ... so that models will work upon the corresponding databases (internally)
 	openBranches = require('../../models/tags.js')('branch');
 

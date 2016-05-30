@@ -18,6 +18,17 @@ class Webhook {
 		this.params = params || {};
 	}
 
+
+	/**
+	 * Init webhook, e.g. while it is registered by the webhook-engine.
+	 * 
+	 * @return {Promise}
+	 */
+	init() {
+		return Promise.resolve(); // by default we have nothing to initialize.
+	}
+
+
 /**
  * Checks if the current webhook should be executed on invoke or not.
  * 
@@ -27,7 +38,7 @@ class Webhook {
  *   true if the webhook should be executed, false otherwise
  */
 	shouldBeExecuted(data) {
-		return true; // by default the webhook is invoked
+		return Promise.resolve(true); // by default the webhook is invoked
 	}
 
 /**

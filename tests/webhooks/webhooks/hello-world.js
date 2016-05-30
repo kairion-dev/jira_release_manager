@@ -6,10 +6,7 @@ var Promise = require('bluebird'),
 class HelloWorldWebhook extends Webhook {
 
 	shouldBeExecuted(data) {
-		if (data === 'dont execute') {
-			return false;
-		}
-		return true;
+		return Promise.resolve(data !== 'dont execute');
 	}
 
 	invoke(data) {

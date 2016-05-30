@@ -13,6 +13,16 @@ jira:
   newCapKey: 'customfield_13103'
   username: 'your_username'
   password: 'your_password'
+  issueType:
+    epic: '5'
+    deployment: '2'
+    codeReview: '11305'
+    functionalReview: '9'
+    roadmapPlanning: '10500'
+  status:
+    notPlanned: '10307'
+  transition:
+    selectedForDevelopment: '911'
 # alternatively, use oath to authorize. Delete both fields username and password. The old access data:
 #    oauth:
 #      consumer_key: '94S37YKpXdmmbENb'
@@ -27,7 +37,14 @@ git:
       name: 'testgit'
 webhooks:
   jira:
+    logger-issue-updated:
+      path: '../webhooks/logger-issue-updated'
     update-ticket:
       path: '../webhooks/update-ticket'
       params:
         dbName: 'tickets'
+    create-auxiliary-tickets:
+      path: '../webhooks/create-auxiliary-tickets'
+  bitbucket:
+    create-tag:
+      path: '../webhooks/create-tag'

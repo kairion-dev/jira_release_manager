@@ -26,7 +26,7 @@ class UpdateTicket extends Webhook {
 	 * @return {Boolean}
 	 */
 	shouldBeExecuted(data) {
-		return data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated';
+		return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated');
 	};
 
 	/**

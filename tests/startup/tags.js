@@ -9,7 +9,7 @@ var
 	Git = require('nodegit'),
 	GitHistory = require('../../lib/git.js').GitHistory,
 	moment = require('moment'),
-	db = require('../../lib/db.js').db(config), // init database with testing environment configs...
+	db = require('../../lib/db.js').db(),
 	releases = require('../../models/tags.js')('release'); // ... so that models will work upon the corresponding databases (internally)
 
 chai.use(require('chai-things')); // to test array elements with chai
@@ -154,9 +154,6 @@ describe('check next release', function() {
 			.then(() => Generator.switchToBranch('feature/feature1'))
 			.then(() => Generator.createCommit([ ], Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-28 01:04:00').unix(), 120), 'KD-1111 commit message 1'))
 			.then(() => Generator.mergeBranches('develop', 'feature/feature1', Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-29 17:10:00').unix(), 120)))
-			.catch((e) => {
-				console.log(e);
-			})
 	})
 	it('ticket from feature1 should be in next release', function() {
 		return git.initialize()

@@ -80,7 +80,7 @@ describe("Webhook 'Create Tag'", function() {
 	});
 	describe('Check with remote repository', function() {
 		it('release tags should be empty at the beginning', function() {
-			return core.init(repoId)
+			return core.initRepository(repoId)
 				.then(() => db.tags.findAsync({ type: 'release' }))
 				.then((docs) => docs.should.be.empty);
 		});
@@ -88,7 +88,7 @@ describe("Webhook 'Create Tag'", function() {
 			return GeneratorRemote.createCommit([], author, 'KD-1111 commit 1')
 				.then((commit) => GeneratorRemote.repo.createTag(commit, '17.07.7', ''))
 				.then(() => Generator1.pull('master'))
-				.then(() => core.init(repoId))
+				.then(() => core.initRepository(repoId))
 				.then(() => db.tags.findAsync({ type: 'release' }))
 				.then((docs) => {
 					docs.should.have.lengthOf(1);
@@ -98,7 +98,7 @@ describe("Webhook 'Create Tag'", function() {
 				})
 		});
 		it('do the same but this time by calling the create-tag webhook', function() {
-			return core.init(repoId)
+			return core.initRepository(repoId)
 				.then(() => db.tags.findAsync({ type: 'release' }))
 				.then((docs) => docs.should.be.empty) // again no release tags expected before pull
 				.then(() => GeneratorRemote.createCommit([], author, 'KD-1111 commit 1'))

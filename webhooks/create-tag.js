@@ -36,7 +36,7 @@ class CreateTag extends Webhook {
 		return spawn('git', args, { capture: [ 'stdout', 'stderr' ] })
 			.then((res) => {
 				log.info("git fetch for repo '" + repoId + "' " + res.stdout + " " + res.stderr);
-  			return core.init(repoId); 
+  			return core.initRepository(repoId); 
 			})
 			.catch((e) => {
         log.error('Error while executing git fetch for \'' + gitPath + '\': ', e);

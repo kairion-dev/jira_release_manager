@@ -15,7 +15,7 @@ var app = require('./app.js')(core.jira);
 
 // "Unable to connect to JIRA during findIssueStatus" if run in parallel, thus we fetch the repository issues in serial
 Promise.mapSeries(Object.keys(config.get('git.repositories')), (repoId) => {
-  return core.init(repoId); 
+  return core.initRepository(repoId); 
 })
   .then(() => {
     log.info('Inital fetch done, starting app');

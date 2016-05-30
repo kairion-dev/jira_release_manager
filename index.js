@@ -4,8 +4,7 @@ var
   config = require('config'),
   http = require('http'),
   kcommon = require('./lib/common.js'),
-  Core = require('./lib/core'),
-  fs = require('fs')
+  Core = require('./lib/core');
 
 
 // load the release-manager

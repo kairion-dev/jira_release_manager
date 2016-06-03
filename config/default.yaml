@@ -21,6 +21,7 @@ jira:
     roadmapPlanning: '10500'
   status:
     notPlanned: '10307'
+    selectedForDevelopment: '10908'
   transition:
     selectedForDevelopment: '911'
 # alternatively, use oath to authorize. Delete both fields username and password. The old access data:
@@ -45,6 +46,10 @@ webhooks:
         dbName: 'tickets'
     create-auxiliary-tickets:
       path: '../webhooks/create-auxiliary-tickets'
+    tickets-to-development:
+      path: '../webhooks/tickets-to-development'
+    develop-on-timetracking:
+      path: '../webhooks/develop-on-timetracking'
   bitbucket:
     create-tag:
       path: '../webhooks/create-tag'

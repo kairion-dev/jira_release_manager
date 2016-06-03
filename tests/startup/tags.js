@@ -27,7 +27,53 @@ var Generator = new RepositoryGenerator(options.path);
 // init git library for testing
 var git = new GitHistory(options, db);
 
-
+describe('Check basics of git library', function() {
+  it('Test storeTag()', function() {
+    var data = {
+      tag: '14.02.1',
+      commits: [
+        {
+          id: '2cc62f053abd58016df5d6e7d8ee491cc963cf5a',
+          author: 'Karl-Heinz',
+          date: 'Thu Dec 4 13:31:02 2014 +0100',
+          message: 'KD-1234 some commit'
+        },
+        {
+          id: '12345f053abd58016df5d6e7d8ee491cc963cf5a',
+          author: 'Karl-Heinz',
+          date: 'Thu Dec 4 14:30:00 2014 +0100',
+          message: 'KD-0 quick fix'
+        },
+        {
+          id: 'eef34f053abd58016df5d6e7d8ee491cc963cf5a',
+          author: 'Karl-Heinz',
+          date: 'Thu Dec 4 15:30:00 2014 +0100',
+          message: 'no KD-XXXX in the message'
+        },
+        {
+          id: '2ccaaaa53abd58016df5d6e7d8ee491cc963cf5a',
+          author: 'Operator',
+          date: 'Thu Dec 4 16:30:00 2014 +0100',
+          message: 'KDO-123 business, busi, bu!'
+        }
+      ],
+      type: 'release'
+    };
+    return db['tags'].removeAsync({}, { multi: true })
+      .then(() => git.storeTag(data.tag, data.commits, data.type))
+      .then(() => db.tags.findAsync({ type: 'release' }))
+      .then((docs) => {
+        docs.should.have.lengthOf(1); // one new tag should be inserted in db
+        var doc = docs[0];
+        doc.should.have.property('tickets');
+        doc.tickets.should.have.lengthOf(4);
+        doc.tickets.should.contain('KD-1234');
+        doc.tickets.should.contain('KD-0 quick fix');
+        doc.tickets.should.contain('KD-0 no KD-XXXX in the message');
+        doc.tickets.should.contain('KDO-123');
+      });
+  });
+});
 describe('check repository initializing for tags', function() {
 	before(function() {
 		var branches = [ 'develop', 'feature/feature1', 'feature/feature2', 'feature/feature3' ];
@@ -188,10 +234,11 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(1);
 				docs = helper.arrayToObject(docs, 'tag');
 				var nextRelease = docs['Next Release'];
-				nextRelease.tickets.should.have.lengthOf(3);
+				nextRelease.tickets.should.have.lengthOf(4);
 				nextRelease.tickets.should.contain('KD-1111');
 				nextRelease.tickets.should.contain('KD-2222');
 				nextRelease.tickets.should.contain('KD-3333');
+        nextRelease.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
 			})
 	});
 	it('next release should not exist any more after release but new tag should be visible', function() {
@@ -203,10 +250,12 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(1);
 				docs = helper.arrayToObject(docs, 'tag');
 				var tag = docs['16.01.1'];
-				tag.tickets.should.have.lengthOf(3);
+				tag.tickets.should.have.lengthOf(5);
 				tag.tickets.should.contain('KD-1111');
 				tag.tickets.should.contain('KD-2222');
 				tag.tickets.should.contain('KD-3333');
+        tag.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
+        tag.tickets.should.contain('KD-0 Initial commit');
 			})
 	});
 	it('next release should only show new changes from feature3', function() {
@@ -219,13 +268,16 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(2);
 				docs = helper.arrayToObject(docs, 'tag');
 				var tag = docs['16.01.1'];
-				tag.tickets.should.have.lengthOf(3);
+				tag.tickets.should.have.lengthOf(5);
 				tag.tickets.should.contain('KD-1111');
 				tag.tickets.should.contain('KD-2222');
 				tag.tickets.should.contain('KD-3333');
+        tag.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
+        tag.tickets.should.contain('KD-0 Initial commit');
 				var nextRelease = docs['Next Release'];
-				nextRelease.tickets.should.have.lengthOf(1);
+				nextRelease.tickets.should.have.lengthOf(2);
 				nextRelease.tickets.should.contain('KD-4444');
+        nextRelease.tickets.should.contain('KD-0 Merged feature/feature3 into develop');
 			})
 	});
 });

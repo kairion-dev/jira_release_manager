@@ -55,6 +55,12 @@ describe('Check basics of git library', function() {
           author: 'Operator',
           date: 'Thu Dec 4 16:30:00 2014 +0100',
           message: 'KDO-123 business, busi, bu!'
+        },
+        {
+          id: '123457253abd58016df5d6e7d8ee491cc963cf5a',
+          author: 'Thomas',
+          date: 'Thu Dec 4 17:30:00 2014 +0100',
+          message: 'Merge branch feature/myFeauture into develop\n'
         }
       ],
       type: 'release'
@@ -71,6 +77,8 @@ describe('Check basics of git library', function() {
         doc.tickets.should.contain('KD-0 quick fix');
         doc.tickets.should.contain('KD-0 no KD-XXXX in the message');
         doc.tickets.should.contain('KDO-123');
+        doc.commits.should.equal(4);
+        doc.merges.should.equal(1); // one branch is merged
       });
   });
 });
@@ -105,6 +113,7 @@ describe('check repository initializing for tags', function() {
 				doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-3333');
 				doc.tickets.should.contain('KD-4444');
+        doc.tickets.should.contain('KD-0 Initial commit');
 				doc.commits.should.equal(3);
 			})
 	});
@@ -119,16 +128,18 @@ describe('check repository initializing for tags', function() {
 				// should contain the same values as before
 				var doc = docs['16.01.1'];
 				doc.tag.should.equal('16.01.1');
-				doc.repository.should.equal('testgit');
+        doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-3333');
 				doc.tickets.should.contain('KD-4444');
-				doc.commits.should.equal(3); // 2 commits + initial commit
+        doc.tickets.should.contain('KD-0 Initial commit');
+        doc.commits.should.equal(3); // 2 commits + initial commit
 				// should contain the differences to the first tag, that means one commit with ticket KD-5555
 				doc = docs['16.01.2'];
 				doc.tag.should.equal('16.01.2');
 				doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-2222');
-				doc.commits.should.equal(2); // 1 commit + initial commit
+        doc.commits.should.equal(1);
+        doc.merges.should.equal(1);
 			})
 	});
 	it('add third release tag with new commits', function() {
@@ -146,7 +157,8 @@ describe('check repository initializing for tags', function() {
 				doc.repository.should.equal('testgit');
 				doc.tickets.should.contain('KD-1111');
 				doc.tickets.should.contain('KD-6666');
-				doc.commits.should.equal(3); // 2 commits + initial commit
+				doc.commits.should.equal(2);
+        doc.merges.should.equal(1);
 			});
 	});
 });
@@ -234,11 +246,11 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(1);
 				docs = helper.arrayToObject(docs, 'tag');
 				var nextRelease = docs['Next Release'];
-				nextRelease.tickets.should.have.lengthOf(4);
 				nextRelease.tickets.should.contain('KD-1111');
 				nextRelease.tickets.should.contain('KD-2222');
 				nextRelease.tickets.should.contain('KD-3333');
-        nextRelease.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
+        nextRelease.tickets.should.have.lengthOf(3);
+        nextRelease.merges.should.equal(1);
 			})
 	});
 	it('next release should not exist any more after release but new tag should be visible', function() {
@@ -250,12 +262,12 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(1);
 				docs = helper.arrayToObject(docs, 'tag');
 				var tag = docs['16.01.1'];
-				tag.tickets.should.have.lengthOf(5);
+				tag.tickets.should.have.lengthOf(4);
 				tag.tickets.should.contain('KD-1111');
 				tag.tickets.should.contain('KD-2222');
 				tag.tickets.should.contain('KD-3333');
-        tag.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
         tag.tickets.should.contain('KD-0 Initial commit');
+        tag.merges.should.equal(1);
 			})
 	});
 	it('next release should only show new changes from feature3', function() {
@@ -268,16 +280,16 @@ describe('check next release', function() {
 				docs.should.have.lengthOf(2);
 				docs = helper.arrayToObject(docs, 'tag');
 				var tag = docs['16.01.1'];
-				tag.tickets.should.have.lengthOf(5);
+				tag.tickets.should.have.lengthOf(4);
 				tag.tickets.should.contain('KD-1111');
 				tag.tickets.should.contain('KD-2222');
 				tag.tickets.should.contain('KD-3333');
-        tag.tickets.should.contain('KD-0 Merged feature/feature2 into develop');
         tag.tickets.should.contain('KD-0 Initial commit');
+        tag.merges.should.equal(1);
 				var nextRelease = docs['Next Release'];
-				nextRelease.tickets.should.have.lengthOf(2);
+				nextRelease.tickets.should.have.lengthOf(1);
 				nextRelease.tickets.should.contain('KD-4444');
-        nextRelease.tickets.should.contain('KD-0 Merged feature/feature3 into develop');
+        nextRelease.merges.should.equal(1);
 			})
 	});
 });

@@ -16,8 +16,12 @@ block content
       .col-xs-6.col-sm-3 Date:
       .col-xs-6.col-sm-3= release.last_commit_date
     .row
-      .col-xs-6.col-sm-3 Commits:
-      .col-xs-6.col-sm-3= release.commits
+      .col-xs-6.col-sm-3 Commits (Merges):
+      if typeof release.merges === 'undefined'
+        .col-xs-6.col-sm-3 #{release.commits}
+          a(href="#" data-toggle="tooltip" title="Not yet available. Merges are probably counted as commits.")  (?)
+      else
+        .col-xs-6.col-sm-3 #{release.commits} (#{release.merges})
     .row
       .col-xs-6.col-sm-3 Tickets:
       .col-xs-6.col-sm-3= release.tickets.length

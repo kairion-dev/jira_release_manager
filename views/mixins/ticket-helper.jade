@@ -11,7 +11,9 @@ mixin tickets(subtitle, tickets)
 mixin repoTickets(targetRepository, repo, tickets)
     .panel.panel-default
         .panel-heading Repository: #{repo}&nbsp;
-            a(href=targetRepository) (Details)
+          a(href=targetRepository) (Details)
         .panel-body
-            +tickets('Features', tickets.features)
-            +tickets('Bugfixes', tickets.bugfixes)
+          if tickets.quickfixes
+            p The release contains quickfixes or undefined commits for this repository
+          +tickets('Features', tickets.features)
+          +tickets('Bugfixes', tickets.bugfixes)

@@ -239,9 +239,9 @@ describe('Unit testing', function() {
 						// should include the 'normal' tickets
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-3333']);
-						// should include the KD-0 tickets with correct summary
-						tickets.should.include.something.that.deep.equals(generateKDZeroTicket("KD-0 bootup changes", 1));
-						tickets.should.include.something.that.deep.equals(generateKDZeroTicket("KD-0 brain connect mode", 2));
+						// should NOT include any KD-0 tickets
+						tickets.should.not.include.something.that.deep.equals(generateKDZeroTicket("KD-0 bootup changes", 1));
+						tickets.should.not.include.something.that.deep.equals(generateKDZeroTicket("KD-0 brain connect mode", 2));
 						// should include the parent ticket of KD-1111 (that is KD-7777)
 						tickets.should.include.something.that.deep.equals(kd7777);
 						// so we expect no KD-1111 within the tickets
@@ -254,8 +254,8 @@ describe('Unit testing', function() {
 						// should include the 'normal' tickets
 						tickets.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 						tickets.should.include.something.that.deep.equals(ticketsObj['KDO-111']);
-						// should include the KD-0 tickets with correct summary
-						tickets.should.include.something.that.deep.equals(generateKDZeroTicket("KD-0 bugfix", 1));
+						// should NOT include the KD-0 ticket
+						tickets.should.not.include.something.that.deep.equals(generateKDZeroTicket("KD-0 bugfix", 1));
 						// should include the parent ticket of KD-1111 (that is KD-7777)
 						tickets.should.include.something.that.deep.equals(kd7777);
 						// so we expect no KD-1111 within the tickets
@@ -295,11 +295,11 @@ describe('Unit testing', function() {
 
 							features.should.include.something.that.deep.equals(ticketsObj['KD-2222']);
 							features.should.include.something.that.deep.equals(ticketsObj['KD-3333']);
-							features.should.include.something.that.deep.equals(generateKDZeroTicket("KD-0 bootup changes", 1));
-							features.should.include.something.that.deep.equals(generateKDZeroTicket("KD-0 brain connect mode", 2));
 							features.should.include.something.that.deep.equals(kd7777);
 							features.should.not.include.something.that.deep.equals(ticketsObj['KD-1111']);
-
+              
+              // there should be no KD-0 ticket left in features cause they are not shown any more in the overview but in the detail view only
+              
 							// TODO also check repo2 and repo3 in detail
 
 							return releases.getTagDocsWithTickets('15.12.2', jira);

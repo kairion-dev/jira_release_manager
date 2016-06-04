@@ -81,7 +81,7 @@ class RepositoryGenerator {
 				return index.writeTree();
 			})
 			.then((oid) => {
-				return this.repo.createCommit('HEAD', author, author, 'initial commit', oid, []);
+				return this.repo.createCommit('HEAD', author, author, 'Initial commit', oid, []);
 			})
 			.then((commitId) => {
 				return Promise.map(branches, (name) => {

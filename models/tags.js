@@ -64,17 +64,20 @@ module.exports = function(tagType) {
       return jira.getIssues(doc.tickets)
         .then(jira.linkChildren)
         .then((tickets) => {
+          let quickfixes = false;
           tickets = tickets.reduce(
             (current, ticket) => {
-              if (ticket.issueType == 'Bug') {
-                current.bugfixes.push(ticket);
+              if (ticket.key.startsWith('KD-0 ')) {
+                quickfixes = true;
               } else {
-                current.features.push(ticket);
+                let issueType = (ticket.issueType == 'Bug') ? 'bugfixes' : 'features';
+                current[issueType].push(ticket);
               }
               return current;
             }, { features: [], bugfixes: [] });
           tickets.features.sort((a,b) => { return a.key < b.key });
           tickets.bugfixes.sort((a,b) => { return a.key < b.key });
+          tickets.quickfixes = quickfixes;
           return { repo: doc.repository, tickets: tickets, release: doc.release };
         })
     });
@@ -110,10 +113,48 @@ module.exports = function(tagType) {
         });
       })
   };
+  
+  /**
+   * Group KD-0 tickets as children to one ticket.
+   * 
+   * @param  {Array{Ticket}} tickets
+   * @return {Array{Ticket}}
+   *   The exact same tickets as before except all undefined tickets are grouped to a new ticket
+   */
+  var groupUndefinedTickets = function(tickets) {
+    var resultTickets = [], children = [];
+    tickets.forEach((ticket) => {
+      if (ticket.key.startsWith('KD-0 ')) {
+        children.push(ticket);
+      } else {
+        resultTickets.push(ticket);
+      }
+    });
+    if (children.length > 0) {
+      var groupTicket = {
+        key: 'Group',
+        project: 'KD',
+        summary: 'Quickfixes and/or undefined tickets',
+        status: '-',
+        issueType: '-',
+        assignee: '-',
+        components: [],
+        parent: false,
+        newCap: false,
+        children: []
+      };
+      children.forEach((ticket) => {
+        groupTicket.children.push(ticket);
+      })
+      resultTickets.push(groupTicket)
+    }
+    return resultTickets;
+  }
 
   module.getTickets = function(release, jira) {
     return jira.getIssues(release.tickets)
-      .then(jira.linkChildren);
+      .then((tickets) => jira.linkChildren(tickets))
+      .then((tickets) => groupUndefinedTickets(tickets));
   }
 
   return module;

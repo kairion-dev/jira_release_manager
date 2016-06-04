@@ -4,7 +4,8 @@ include ../mixins/release-status-helper
 
 block content
     h1.page-header= title
-    +releaseStatus(docs)
+    if tag != 'Next Release'
+      +releaseStatus(docs)
     each doc in docs
         +repoTickets('/releases/repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets)
 

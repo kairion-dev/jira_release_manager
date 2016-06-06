@@ -1,6 +1,6 @@
 mixin breadcrumb(breadcrumbs)
-	if breadcrumbs
-		ol.breadcrumb
-			each breadcrumb in breadcrumbs
-				li
-					a(href=breadcrumb.link)= breadcrumb.title
+  if breadcrumbs
+    ol.breadcrumb
+      each breadcrumb in breadcrumbs
+        li
+          a(href=breadcrumb.link)= breadcrumb.title

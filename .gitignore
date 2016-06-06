@@ -38,3 +38,6 @@ tickets
 
 # Data used for testing
 tests/data
+
+# Temporary data
+temp

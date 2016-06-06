@@ -117,15 +117,6 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 				expect(res[0]).to.be.undefined;
 			});
 	});
-	it("Should not be executed because issue status is not on 'Not planned'", function() {
-		let request = JSON.parse(JSON.stringify(validWebhookRequest));
-		request.issue.fields.status.id = '12345';
-		return engine.invoke(request)
-			.then((res) => {
-				res.should.have.lengthOf(1);
-				expect(res[0]).to.be.undefined;
-			});
-	});
   it.skip('Should not be executed because issue is not an epic', function() {
     
   });

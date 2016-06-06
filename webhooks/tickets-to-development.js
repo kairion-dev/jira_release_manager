@@ -24,6 +24,7 @@ class TicketsToDevelopment extends Webhook {
     this.kjiraHelper = new KJiraHelper();
     this.transitionId = config.get('jira.transition.selectedForDevelopment');
     this.statusNotPlanned = config.get('jira.status.notPlanned');
+    this.statusSelectedForDevelopment = config.get('jira.status.selectedForDevelopment');
   }
 
 
@@ -78,9 +79,8 @@ class TicketsToDevelopment extends Webhook {
       return item.field == 'status';
     })
       .then((res) => {
-        return data.issue.fields.status.id == this.statusNotPlanned && 
-          data.issue.fields.issuetype.id == config.get('jira.issueType.epic') &&
-          res.length > 0 && res[0].from == config.get('jira.status.notPlanned') && res[0].to == config.get('jira.status.selectedForDevelopment');
+        return data.issue.fields.issuetype.id == config.get('jira.issueType.epic') &&
+          res.length > 0 && res[0].to == this.statusSelectedForDevelopment;
       });
   }
 

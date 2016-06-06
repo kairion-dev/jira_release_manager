@@ -6,27 +6,27 @@
  */
 class Webhook {
 
-	/**
-	 * @param  {String} id
-	 *   Is required to identify the webhook within the engine
-	 * @param  {Object} params
-	 *   Additional parameter to work with - such as databases or configs
-	 *   Parameters are automatically added to be used by the webhook that extends this class.
-	 */
-	constructor(id, params) {
-		this.id = id; 
-		this.params = params || {};
-	}
+  /**
+   * @param  {String} id
+   *   Is required to identify the webhook within the engine
+   * @param  {Object} params
+   *   Additional parameter to work with - such as databases or configs
+   *   Parameters are automatically added to be used by the webhook that extends this class.
+   */
+  constructor(id, params) {
+    this.id = id; 
+    this.params = params || {};
+  }
 
 
-	/**
-	 * Init webhook, e.g. while it is registered by the webhook-engine.
-	 * 
-	 * @return {Promise}
-	 */
-	init() {
-		return Promise.resolve(); // by default we have nothing to initialize.
-	}
+  /**
+   * Init webhook, e.g. while it is registered by the webhook-engine.
+   * 
+   * @return {Promise}
+   */
+  init() {
+    return Promise.resolve(); // by default we have nothing to initialize.
+  }
 
 
 /**
@@ -37,9 +37,9 @@ class Webhook {
  * @return {Bool}
  *   true if the webhook should be executed, false otherwise
  */
-	shouldBeExecuted(data) {
-		return Promise.resolve(true); // by default the webhook is invoked
-	}
+  shouldBeExecuted(data) {
+    return Promise.resolve(true); // by default the webhook is invoked
+  }
 
 /**
  * Invoke the webhook and process the data. This is the method that provides the webhook logic.
@@ -50,9 +50,9 @@ class Webhook {
  * @return {Promise}
  *   [description]
  */
-	invoke(data) {
-		throw new Error('Implement me');
-	}
+  invoke(data) {
+    throw new Error('Implement me');
+  }
 
 }
 

@@ -60,8 +60,8 @@ class UpdateTicket extends Webhook {
       dbDoc.assignee = issue.fields.assignee.displayName;
     }
     if (issue.fields.components) {
-      issue.fields.components.forEach((component) => {
-        dbDoc.components.push(component.name);
+      dbDoc.components = issue.fields.components.map((component) => {
+        return component.name;
       });
     }
     if (issue.fields.parent && issue.fields.parent.key) {

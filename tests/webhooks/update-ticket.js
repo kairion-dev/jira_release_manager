@@ -10,6 +10,7 @@ var
 
 let tickets1 = [
   {"key":"KD-1111","project":"KD","summary":"ai doc-update","status":"In work","issueType":"Development","assignee":"Tomasz Porst","components":[],"parent":false,"newCap":false},
+  {"key":"KD-10609", "status": "Not planned"}
 ];
 
 let config = {
@@ -40,7 +41,7 @@ describe("Webhook 'Update Ticket'", function() {
         }))
       .then((res) => db.tickets.findAsync({ }))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length); // we should have all tickets inserted initially
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       })
@@ -51,7 +52,7 @@ describe("Webhook 'Update Ticket'", function() {
       .then(() => engine.invoke({}))
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length); // we should have all tickets inserted initially
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       })
@@ -59,7 +60,7 @@ describe("Webhook 'Update Ticket'", function() {
       .then(() => engine.invoke({ webhookEvent: 'some_other_event' }))
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length); // we should have all tickets inserted initially
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       });
@@ -72,7 +73,7 @@ describe("Webhook 'Update Ticket'", function() {
       // database should contain the ticket inserted
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length); // we should have the tickets inserted initially
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       })
@@ -82,7 +83,7 @@ describe("Webhook 'Update Ticket'", function() {
       // database should contain the ticket inserted
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length);
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
         return engine.invoke({
@@ -110,7 +111,7 @@ describe("Webhook 'Update Ticket'", function() {
         ticket.status = 'Deployed';
         ticket.assignee = 'Matthias';
 
-        docs.should.have.lengthOf(1); // no new ticket, the original one was updated
+        docs.should.have.lengthOf(tickets1.length); // no new ticket, the original one was updated
         helper.removeIds(docs);
         docs.should.contain.deep(ticket);
       })
@@ -129,7 +130,7 @@ describe("Webhook 'Update Ticket'", function() {
       // nothing should be changed cause epicsKey customfield key was not recognized
       .then(() => db.tickets.findAsync({}))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
+        docs.should.have.lengthOf(tickets1.length);
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       })
@@ -145,10 +146,76 @@ describe("Webhook 'Update Ticket'", function() {
       // now the key fits so we should have KD-2222 as new parent to KD-1111
       .then(() => db.tickets.findAsync({}))
       .then((docs) => {
-        docs.should.have.lengthOf(1);
-        let doc = docs[0];
+        docs.should.have.lengthOf(tickets1.length);
+        let doc = helper.arrayToObject(docs, 'key')['KD-1111'];
         doc.should.have.property('parent');
         doc.parent.should.equal('KD-2222');
+      })
+  });
+  it('Updates with components should trigger successful update and not break anything', function() {
+    return engine.registerByConfig(config)
+      .then(() => db.tickets.findAsync({ }))
+      .then((docs) => {
+        docs.should.have.lengthOf(tickets1.length);
+        helper.removeIds(docs);
+        docs.should.contain.deep(tickets1[1]);
+      })
+      // request does not contain any component but all other fields should be updated successfully
+      .then(() => engine.invoke({
+        timestamp: 1464941097428,
+        webhookEvent: "jira:issue_updated",
+        issue: {
+          id: "38901",
+          key: "KD-10609",
+          fields: {
+            status: {
+              name: "Selected for Development",
+              id: "10908"
+            },
+            components: []
+          }
+        }
+      }))
+      .then((res) => {
+        res[0].should.have.property('id', 'update-ticket');
+        res[0].should.have.property('success', true);
+        return db.tickets.findAsync({ })
+      })
+      .then((docs) => {
+        docs.should.have.lengthOf(tickets1.length); // we still should have the inital tickets only
+        docs = helper.arrayToObject(docs, 'key');
+        docs['KD-10609'].should.have.property('status', "Selected for Development");
+      })
+      // now it does contain components which also should be updated
+      .then(() => engine.invoke({
+        timestamp: 1464941099000,
+        webhookEvent: "jira:issue_updated",
+        issue: {
+          id: "38901",
+          key: "KD-10609",
+          fields: {
+            status: {
+              name: "Deployed"
+            },
+            components: [
+              { id: "10900", name: 'a new component' },
+              { id: "10901", name: 'and a second one' }
+            ]
+          }
+        }
+      }))
+      .then((res) => {
+        res[0].should.have.property('id', 'update-ticket');
+        res[0].should.have.property('success', true);
+        return db.tickets.findAsync({ })
+      })
+      .then((docs) => {
+        docs.should.have.lengthOf(tickets1.length); // we still should have the inital tickets only
+        docs = helper.arrayToObject(docs, 'key');
+        docs['KD-10609'].should.have.property('status', "Deployed");
+        docs['KD-10609'].should.have.property('components');
+        docs['KD-10609'].components.should.contain('a new component');
+        docs['KD-10609'].components.should.contain('and a second one');
       })
   });
 });

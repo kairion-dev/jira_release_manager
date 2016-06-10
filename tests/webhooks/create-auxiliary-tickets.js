@@ -91,9 +91,9 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       // fake mapping bwetween issueTypeIds and issueTypeNames
       sinon.stub(webhook, 'initIssueTypeNames', function() {
         var mapping = {
-          '2': 'Deployment',
-          '5': 'Epic',
-          '9': 'Functional Review',
+          '11301': 'Deployment',
+          '5':     'Epic',
+          '9':     'Functional Review',
           '10500': 'Concept / Roadmap',
           '11305': 'Code Review'
         };
@@ -185,7 +185,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
 
             var summary = 'Deployment: Adding a test issue';
             tickets.should.have.property(summary);
-            checkTicket(tickets[summary], summary, 'KTEST-9768', 'KTEST', '2', 'mwick');
+            checkTicket(tickets[summary], summary, 'KTEST-9768', 'KTEST', '11301', 'mwick');
             var summary = 'Functional Review: Adding a test issue';
             tickets.should.have.property(summary);
             checkTicket(tickets[summary], summary, 'KTEST-9768', 'KTEST', '9', 'mwick');

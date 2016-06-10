@@ -5,7 +5,6 @@ var
   config = require('config'),
   db = require('../lib/db.js').db(),
   Core = require('../lib/core.js'),
-  KJiraHelper = require('../lib/kjira-helper.js'),
   log = require('../lib/logger.js'),
   Webhook = require('./abstract-webhook');
 
@@ -22,7 +21,6 @@ class TicketsToDevelopment extends Webhook {
   constructor(id, params) {
     super(id, params);
     this.jira = new Core().jira;
-    this.kjiraHelper = new KJiraHelper();
     this.transitionId = config.get('jira.transition.selectedForDevelopment');
     this.statusNotPlanned = config.get('jira.status.notPlanned');
     this.statusSelectedForDevelopment = config.get('jira.status.selectedForDevelopment');

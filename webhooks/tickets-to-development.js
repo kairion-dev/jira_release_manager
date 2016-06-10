@@ -6,6 +6,7 @@ var
   db = require('../lib/db.js').db(),
   Core = require('../lib/core.js'),
   KJiraHelper = require('../lib/kjira-helper.js'),
+  log = require('../lib/logger.js'),
   Webhook = require('./abstract-webhook');
 
 var core = new Core();
@@ -67,7 +68,8 @@ class TicketsToDevelopment extends Webhook {
               transition: {
                 id: this.transitionId
               }
-            });
+            })
+              .catch((e) => log.warn("Could not move ticket '" + issue.key + "' to 'Selected for Development'"));
           }
         });
       });

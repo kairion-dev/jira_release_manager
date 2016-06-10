@@ -80,6 +80,10 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
             fields: { status: { id: '12345' } }
           },
           {
+            key: 'KD-4444',
+            fields: { status: { id: jiraStatusNotPlanned } }
+          },
+          {
             key: 'KD-3333',
             fields: { status: { id: jiraStatusNotPlanned } }
           }
@@ -88,7 +92,12 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
     });
 
     sinon.stub(webhook, 'doTransition', function(issueKey, transition) {
-      return Promise.resolve({ issueKey: issueKey, request: transition });
+      if (issueKey == 'KD-4444') {
+        // fake jira error which occurs e.g. when no time is estimated
+        return Promise.reject('Error: 400: Error while updating');
+      } else {
+        return Promise.resolve({ issueKey: issueKey, request: transition });
+      } 
     });
 
     return engine.register(webhook);
@@ -120,19 +129,21 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
   it.skip('Should not be executed because issue is not an epic', function() {
     
   });
-  it("Should move two of three epic children to 'Selected for development'", function() {
+  it("Should move two of four epic children to 'Selected for development'", function() {
     return engine.invoke(validWebhookRequest)
       .then((res) => {
         res.should.have.lengthOf(1);
         res[0].should.have.property('id', 'tickets-to-development');
         res[0].should.have.property('success', true);
         res[0].should.have.property('result');
-        res[0].result.should.have.lengthOf(3);
-        // first and third child should be moved because they were not planned
+        res[0].result.should.have.lengthOf(4);
+        // first and fourth child should be moved because they were not planned
         checkTransition(res[0].result[0], 'KD-1111', jiraTransitionSelectedForDevelopment);
-        checkTransition(res[0].result[2], 'KD-3333', jiraTransitionSelectedForDevelopment);
+        checkTransition(res[0].result[3], 'KD-3333', jiraTransitionSelectedForDevelopment);
         // second child has some other status and thus nothing should happen
         expect(res[0].result[1]).to.be.undefined;
+        // third child has no time estimated which results in an error response. Nevertheless other children should not be affected from this.
+        expect(res[0].result[2]).to.be.undefined;
       });
   });
 });

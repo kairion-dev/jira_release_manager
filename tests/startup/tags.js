@@ -81,6 +81,101 @@ describe('Check basics of git library', function() {
         doc.merges.should.equal(1); // one branch is merged
       });
   });
+  describe("Check 'manual changes'", function() {
+    it("Test extractManualChanges()", function() {
+      var commitMsg, res;
+
+      commitMsg = 'KD-1234 whatever';
+      res = git.extractManualChanges(commitMsg);
+      res.should.have.property('commitMessage');
+      res.should.have.property('manualChanges');
+      res.manualChanges.should.have.lengthOf(0);
+      res.commitMessage.should.equal(commitMsg);
+
+      commitMsg = 'KD-1234 whatever without manualchange: cause not at the beginning of a new line';
+      res = git.extractManualChanges(commitMsg);
+      res.manualChanges.should.have.lengthOf(0);
+      res.commitMessage.should.equal(commitMsg);
+
+      commitMsg = 'KD-1234 whatever with a \nmanualchange: this is cool, test, 123, %&§, manualchange: i\'m happy ;)';
+      res = git.extractManualChanges(commitMsg);
+      res.manualChanges.should.have.lengthOf(1);
+      res.manualChanges[0].should.equal('this is cool, test, 123, %&§, manualchange: i\'m happy ;)');
+      res.commitMessage.should.equal('KD-1234 whatever with a ');
+
+      commitMsg = 'KD-1234 \nmanualchange: a manual change ends \n by the end of the line';
+      res = git.extractManualChanges(commitMsg);
+      res.manualChanges.should.have.lengthOf(1);
+      res.manualChanges[0].should.equal('a manual change ends');
+      res.commitMessage.should.equal('KD-1234 \n by the end of the line');
+
+      commitMsg = 'manualchange: and it can not be at the beginning of the commit message (this way we also ensure a KD-xxxx)';
+      res = git.extractManualChanges(commitMsg);
+      res.manualChanges.should.have.lengthOf(0);
+      res.commitMessage.should.equal(commitMsg);
+
+      commitMsg = 'KD-2345 whatever plus\nmanualchange: a manual change which should be shown on the release page\nmanualchange:this one too ;)\nmanualchange:    and \t the  last one   ';
+      res = git.extractManualChanges(commitMsg);
+      res.manualChanges.should.have.lengthOf(3);
+      res.manualChanges[0].should.equal('a manual change which should be shown on the release page');
+      res.manualChanges[1].should.equal('this one too ;)');
+      res.manualChanges[2].should.equal('and \t the  last one');
+      res.commitMessage.should.equal('KD-2345 whatever plus');
+    });
+    it("Test storeTag() with commits containing manual changes", function() {
+      var data = {
+        tag: '14.02.2',
+        commits: [
+          {
+            id: '2cc62f053abd58016df5d6e7d8ee491cc963cf5a',
+            author: 'Karl-Heinz',
+            date: 'Thu Dec 4 13:31:02 2014 +0100',
+            message: 'KD-1234 some commit'
+          },
+          {
+            id: '12345f053abd58016df5d6e7d8ee491cc963cf5a',
+            author: 'Karl-Heinz',
+            date: 'Thu Dec 4 14:30:00 2014 +0100',
+            message: 'KD-0 quick fix\nmanualchange: first manual change'
+          },
+          {
+            id: 'eef34f053abd58016df5d6e7d8ee491cc963cf5a',
+            author: 'Karl-Heinz',
+            date: 'Thu Dec 4 15:30:00 2014 +0100',
+            message: 'no KD-XXXX in the message\nmanualchange: second manual change\nmanualchange: and third one'
+          },
+          {
+            id: '2ccaaaa53abd58016df5d6e7d8ee491cc963cf5a',
+            author: 'Operator',
+            date: 'Thu Dec 4 16:30:00 2014 +0100',
+            message: 'KDO-123 \nmanualchange: works $%&\'"'
+          }
+        ],
+        type: 'release'
+      };
+      return db['tags'].removeAsync({}, { multi: true })
+        .then(() => git.storeTag(data.tag, data.commits, data.type))
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(1);
+          let doc = docs[0];
+          // we should have the extracted manual change messages
+          doc.should.have.property('manual_changes');
+          doc.manual_changes.should.have.lengthOf(4);
+          doc.manual_changes.should.contain('first manual change');
+          doc.manual_changes.should.contain('second manual change');
+          doc.manual_changes.should.contain('and third one');
+          doc.manual_changes.should.contain('works $%&\'"');
+          // we should have proper formatted tickets without the manual change messages
+          doc.should.have.property('tickets');
+          doc.tickets.should.have.lengthOf(4);
+          doc.tickets.should.contain('KD-1234');
+          doc.tickets.should.contain('KD-0 quick fix');
+          doc.tickets.should.contain('KD-0 no KD-XXXX in the message');
+          doc.tickets.should.contain('KDO-123');
+        });
+    });
+  })
 });
 describe('check repository initializing for tags', function() {
 	before(function() {

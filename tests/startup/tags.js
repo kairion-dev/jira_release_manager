@@ -460,4 +460,125 @@ describe('check repository initializing for open branches', function() {
 		//TODO
 		// .then((commitId) => Generator.repo.createTag(commitId, '16.01.1', 'Message for tag: 16.01.1'))
 	});
+  describe('', function() {
+    var author = Git.Signature.create('Manuel Wick', 'manuel.wick@kairion.de', moment('2016-04-26 00:00:00').unix(), 120);
+
+    it('New repository without any release tag should also deal with a new release branch', function() {
+      return db['tags'].removeAsync({}, { multi: true })
+        .then(() => Generator.init([ 'develop', 'release/15.04.4' ], author))
+        .then(() => Generator.switchToBranch('release/15.04.4'))
+        .then(() => Generator.createCommit([], author, 'KD-1234 commit in release branch'))
+        .then(() => Generator.createCommit([], author, 'KD-4321 another one'))
+        .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(1);
+          let doc = docs[0];
+          doc.should.have.property('preliminary', true);
+          doc.should.have.property('tickets');
+          doc.tickets.should.contain('KD-1234');
+          doc.tickets.should.contain('KD-4321');
+          doc.tickets.should.contain('KD-0 Initial commit');
+        })
+    });
+    it('Release branch should be handled as a preliminary release', function() {
+      return Generator.init([ 'develop', 'release/15.04.3' ], author)
+        .then(() => Generator.switchToBranch('master'))
+        .then(() => Generator.createCommit([], author, 'KD-1111 commit 1'))
+        .then((commitId) => Generator.repo.createTag(commitId, '15.04.1', 'Tag: 15.04.1'))
+        .then(() => Generator.createCommit([], author, 'KD-2222 commit 2'))
+        .then(() => Generator.createCommit([], author, 'KD-3333 commit 3'))
+        .then((commitId) => Generator.repo.createTag(commitId, '15.04.2', 'Tag: 15.04.2'))
+        .then(() => Generator.mergeBranches('release/15.04.3', 'master'))
+        .then(() => Generator.switchToBranch('release/15.04.3'))
+        .then(() => Generator.createCommit([], author, 'KD-4444 commit 4'))
+        .then(() => db['tags'].removeAsync({}, { multi: true }))
+        .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(3);
+          docs = helper.arrayToObject(docs, 'tag');
+          // only the last release should be preliminary cause it is a new release branch and not a tag
+          docs['15.04.1'].should.have.property('preliminary', false);
+          docs['15.04.2'].should.have.property('preliminary', false);
+          docs['15.04.3'].should.have.property('preliminary', true);
+          // the release branch should show only the difference to tag 15.04.2 which means one commit
+          docs['15.04.3'].tickets.should.contain('KD-4444');
+        })
+    })
+    it('Release branch should be updated on new commits', function() {
+      return Generator.createCommit([], author, 'KD-5555 commit 5')
+        .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(3);
+          docs = helper.arrayToObject(docs, 'tag');
+          docs['15.04.3'].should.have.property('preliminary', true);
+          docs['15.04.3'].tickets.should.contain('KD-4444'); // the old commit should still be there
+          docs['15.04.3'].tickets.should.contain('KD-5555'); // ... but also the new commit
+        })
+    });
+    it('Adding a new status for the release branch should be possible', function() {
+      return releases.addStatus('testing', '15.04.3', 'testgit', 'works', '22.04.2015 12:05', 'Manuel')
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs = helper.arrayToObject(docs, 'tag');
+          docs['15.04.3'].should.have.property('preliminary', true);
+          docs['15.04.3'].release.testing.should.have.lengthOf(1);
+          let status = docs['15.04.3'].release.testing[0];
+          status.status.should.equal('works');
+          status.author.should.equal('Manuel');
+          status.date.should.equal('22.04.2015 12:05');
+        })
+    });
+    it('status should not be touched by any new commit in the release branch', function() {
+      return Generator.createCommit([], author, 'KD-6666 commit 6')
+        .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(3);
+          docs = helper.arrayToObject(docs, 'tag');
+          docs['15.04.3'].should.have.property('preliminary', true);
+          docs['15.04.3'].tickets.should.contain('KD-6666'); // tag should have the new commit
+          let status = docs['15.04.3'].release.testing[0];
+          status.status.should.equal('works');
+          status.author.should.equal('Manuel');
+          status.date.should.equal('22.04.2015 12:05');
+        })
+    });
+    it('and also not by finally creating the release tag that should replace the release branch', function() {
+      return Generator.mergeBranches('master', 'release/15.04.3')
+        .then((mergeCommit) => {
+          return Generator.switchToBranch('master')
+            .then(() => Generator.repo.createTag(mergeCommit, '15.04.3', 'new tag: 15.04.3'))
+        })
+        .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(3);
+          docs = helper.arrayToObject(docs, 'tag');
+          // now we should have a real release tag, thus preliminary should be false
+          docs['15.04.3'].should.have.property('preliminary', false);
+          // we should have all previous tickets in the release branch
+          docs['15.04.3'].tickets.should.contain('KD-4444');
+          docs['15.04.3'].tickets.should.contain('KD-5555');
+          docs['15.04.3'].tickets.should.contain('KD-6666');
+          // status should be still the same
+          let status = docs['15.04.3'].release.testing[0];
+          status.status.should.equal('works');
+          status.author.should.equal('Manuel');
+          status.date.should.equal('22.04.2015 12:05');
+        })
+    });
+    it('but by now new commits should not change the release any more', function() {
+      return Generator.createCommit([], author, 'KD-7777 commit 7')
+      .then(() => git.initialize())
+        .then(() => db.tags.findAsync({ type: 'release' }))
+        .then((docs) => {
+          docs.should.have.lengthOf(3);
+          docs = helper.arrayToObject(docs, 'tag');
+          docs['15.04.3'].tickets.should.not.contain('KD-7777');
+        })
+    });
+  });
 });

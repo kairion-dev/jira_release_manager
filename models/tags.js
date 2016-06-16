@@ -2,11 +2,20 @@
 var
 	Promise = require('bluebird'),
   kcommon = require('../lib/common.js'),
+  config = require('config'),
   db = require('../lib/db').db();
 
 
 module.exports = function(tagType) {
   var module = {};
+
+  /**
+   * E.g. { 'repo1': { ... }, 'repo2': { ... }, ... } => { 'repo1': 0, 'repo2': 1, ... }
+   */
+  var sortMapping = Object.keys(config.get('git.repositories')).reduce((repos, current, index) => {
+    repos[current] = index;
+    return repos;
+  }, {})
 
   module.getRepoTags = function(repository) {
     return new Promise((resolve, reject) => {
@@ -49,14 +58,20 @@ module.exports = function(tagType) {
       .then((docs) => enrichTagsWithTickets(docs, jira));
   };
 
+  /**
+   * Use the order of the repository configurations to sort docs
+   * @param  {Object} docs
+   * @return {[type]}
+   */
+  module.sortDocs = function(docs) {
+    return Promise.resolve(docs.sort(function(a,b) {
+      return sortMapping[a.repository] - sortMapping[b.repository];
+    }));
+  }
+
   var getTagDocs = function(tag) {
-    return new Promise(
-      (resolve, reject) => {
-        db.tags.find({ type: tagType, tag: tag }).exec((err, docs) => {
-          if (err) reject(err);
-          else resolve(docs);
-        })
-      })
+    return db.tags.findAsync({ type: tagType, tag: tag })
+      .then((docs) => module.sortDocs(docs));
   };
 
   var enrichTagsWithTickets = function(docs, jira) {

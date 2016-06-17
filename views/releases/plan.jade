@@ -7,7 +7,7 @@ block content
     if tag != 'Next Release'
       +releaseStatus(docs)
     each doc in docs
-        +repoTickets('/releases/repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets)
+        +repoTickets('/releases/repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets, doc.manual_changes)
 
 block scripts
         script(src='/bower_components/moment/min/moment.min.js')

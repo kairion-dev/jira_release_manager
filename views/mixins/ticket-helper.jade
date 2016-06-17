@@ -1,19 +1,24 @@
 //- Show a single ticket
 mixin tickets(subtitle, tickets)
-    b= subtitle
-    ul
-        each ticket in tickets
-            li
-                a(href='https://kairion.atlassian.net/browse/' + ticket.key)= ticket.key
-                span  - #{ticket.summary}
+  b= subtitle
+  ul
+    each ticket in tickets
+      li
+        a(href='https://kairion.atlassian.net/browse/' + ticket.key)= ticket.key
+        span  - #{ticket.summary}
 
 //- Show all related tickets
-mixin repoTickets(targetRepository, repo, tickets)
-    .panel.panel-default
-        .panel-heading Repository: #{repo}&nbsp;
-          a(href=targetRepository) (Details)
-        .panel-body
-          if tickets.quickfixes
-            p The release contains quickfixes or undefined commits for this repository
-          +tickets('Features', tickets.features)
-          +tickets('Bugfixes', tickets.bugfixes)
+mixin repoTickets(targetRepository, repo, tickets, manual_changes)
+  .panel.panel-default
+    .panel-heading Repository: #{repo}&nbsp;
+      a(href=targetRepository) (Details)
+    .panel-body
+      if tickets.quickfixes
+        p The release contains quickfixes or undefined commits for this repository
+      +tickets('Features', tickets.features)
+      +tickets('Bugfixes', tickets.bugfixes)
+      if manual_changes.length > 0
+        b= 'Manual Changes'
+        ul
+          each manual_change in manual_changes
+            li= manual_change

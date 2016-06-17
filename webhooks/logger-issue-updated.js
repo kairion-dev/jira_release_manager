@@ -9,8 +9,9 @@ class LoggerIssueUpdated extends Webhook {
 
   /**
    * Process when a ticket has been updated.
+   * 
    * @param  {Object} data
-   * @return {Promise{Boolean}}
+   * @return {Promise<Boolean>}
    */
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated');
@@ -18,6 +19,7 @@ class LoggerIssueUpdated extends Webhook {
 
   /**
    * Just return the incoming data in order to log it.
+   * 
    * @param  {Jira Callback} data
    *   Have a look at https://developer.atlassian.com/jiradev/jira-apis/webhooks
    * @return {Promise}

@@ -15,15 +15,17 @@ jira:
   password: 'your_password'
   issueType:
     epic: '5'
-    deployment: '2'
+    deployment: '11301'
     codeReview: '11305'
     functionalReview: '9'
     roadmapPlanning: '10500'
   status:
     notPlanned: '10307'
     selectedForDevelopment: '10908'
+    deployed: '5'
   transition:
     selectedForDevelopment: '911'
+    deployed: '941'
 # alternatively, use oath to authorize. Delete both fields username and password. The old access data:
 #    oauth:
 #      consumer_key: '94S37YKpXdmmbENb'

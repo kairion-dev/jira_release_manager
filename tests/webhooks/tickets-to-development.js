@@ -6,16 +6,12 @@ var
 	expect = chai.expect,
 	Promise = require('bluebird'),
 	db = require('../../lib/db.js').db(require('config')),
-	Core = require('../../lib/core.js'),
-	KJiraHelper = require('../../lib/kjira-helper.js'),
 	WebhookEngine = require('../../webhooks/webhook-engine.js'),
 	Webhook = require('../../webhooks/tickets-to-development.js'),
 	sinon = require('sinon'),
 	helper = require('../helper/common.js');
 
 require('sinon-as-promised');
-
-var core = new Core();
 
 
 var jiraIssueTypeEpic = '5';
@@ -80,7 +76,11 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
             fields: { status: { id: '12345' } }
           },
           {
-            key: 'KD-4444',
+            key: 'KD-4444', // all tickets starting with 'KD-4...' will throw Jira fake errors
+            fields: { status: { id: jiraStatusNotPlanned } }
+          },
+          {
+            key: 'KD-4010',
             fields: { status: { id: jiraStatusNotPlanned } }
           },
           {
@@ -92,12 +92,78 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
     });
 
     sinon.stub(webhook, 'doTransition', function(issueKey, transition) {
-      if (issueKey == 'KD-4444') {
-        // fake jira error which occurs e.g. when no time is estimated
-        return Promise.reject('Error: 400: Error while updating');
+      // all tickets starting with KD-4 should result in a fake jira error which occurs e.g. when no time is estimated
+      if (issueKey.startsWith('KD-4')) {
+        return Promise.reject('Error: 400: Fake testing error while updating');
       } else {
         return Promise.resolve({ issueKey: issueKey, request: transition });
       } 
+    });
+
+    sinon.stub(webhook, 'findIssue', function(issueKey) {
+      var issues = {
+        'KD-4010': {
+          fields: {
+            timeestimate: null,
+            subtasks: [
+              { key: 'KD-4011' }, { key: 'KD-4012' }
+            ]
+          }
+        },
+        'KD-4020': {
+          fields: {
+            timeestimate: null,
+            subtasks: [
+              { key: 'KD-4021' }, { key: 'KD-4022' }
+            ]
+          }
+        },
+        'KD-4030': {
+          fields: {
+            timeestimate: null,
+            subtasks: [
+              { key: 'KD-4031' }, { key: 'KD-4032' }
+            ]
+          }
+        }
+      }
+      return Promise.resolve(issues[issueKey]);
+    });
+
+    sinon.stub(webhook, 'getTimeEstimates', function(issueKeys) {
+      var issues = {
+        'KD-4011': {
+          fields: {
+            timeestimate: 3600
+          }
+        },
+        'KD-4012': {
+          fields: {
+            timeestimate: 600
+          }
+        },
+        'KD-4021': {
+          fields: {
+            timeestimate: null
+          }
+        },
+        'KD-4022': {
+          fields: {
+            timeestimate: 0
+          }
+        }
+      }
+      return Promise.reduce(issueKeys, (total, issueKey) => {
+        if (issues[issueKey]) {
+          total.issues.push(issues[issueKey]);
+          total.total += 1;
+        }
+        return total;
+      }, { issues: [], total: 0 });
+    });
+
+    sinon.stub(webhook, 'initTimetracking', function(issueKey) {
+      return Promise.resolve({ 'initTimetracking': issueKey });
     });
 
     return engine.register(webhook);
@@ -136,14 +202,35 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
         res[0].should.have.property('id', 'tickets-to-development');
         res[0].should.have.property('success', true);
         res[0].should.have.property('result');
-        res[0].result.should.have.lengthOf(4);
-        // first and fourth child should be moved because they were not planned
+        res[0].result.should.have.lengthOf(5);
+        // first and fifth child should be moved because they were not planned
         checkTransition(res[0].result[0], 'KD-1111', jiraTransitionSelectedForDevelopment);
-        checkTransition(res[0].result[3], 'KD-3333', jiraTransitionSelectedForDevelopment);
+        checkTransition(res[0].result[4], 'KD-3333', jiraTransitionSelectedForDevelopment);
         // second child has some other status and thus nothing should happen
         expect(res[0].result[1]).to.be.undefined;
         // third child has no time estimated which results in an error response. Nevertheless other children should not be affected from this.
         expect(res[0].result[2]).to.be.undefined;
+        // the estimated time for the fourth child could not be set which results in an error reponse.
+        expect(res[0].result[3]).to.be.undefined;
       });
+  });
+  describe("Test tryToInitTimeEstimate()", function() {
+    it("Estimated subtickets", function() {
+      // TODO in fact, the time should be set correctly, but the sinon.stub always returns an error for tickets starting with KD-4
+      // -> implement some logic that processes the webhook successfully if a parent ticket could be initialized by checking subticket times
+      return webhook.tryToInitTimeEstimate('KD-4010')
+        .then((res) => Promise.reject('We should not see this'))
+        .catch((e) => e.should.equal('Estimated and remaining time set but still failing to set status'))
+    });
+    it("Non-estimated subtickets", function() {
+      return webhook.tryToInitTimeEstimate('KD-4020')
+        .then((res) => Promise.reject('We should not see this'))
+        .catch((e) => e.should.equal('No subticket or none of them has estimated time'))
+    });
+    it("No subtickets", function() {
+      return webhook.tryToInitTimeEstimate('KD-4030')
+        .then((res) => Promise.reject('We should not see this'))
+        .catch((e) => e.should.equal('No subticket or none of them has estimated time'))
+    });
   });
 });

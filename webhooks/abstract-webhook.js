@@ -34,7 +34,7 @@ class Webhook {
  * 
  * @param  {Object} data
  *   Data posted from the remote server.
- * @return {Bool}
+ * @return {Promse<Boolean>}
  *   true if the webhook should be executed, false otherwise
  */
   shouldBeExecuted(data) {
@@ -48,7 +48,6 @@ class Webhook {
  * @param  {Object} data
  *   Data posted from the remote server.
  * @return {Promise}
- *   [description]
  */
   invoke(data) {
     throw new Error('Implement me');

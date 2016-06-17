@@ -75,7 +75,7 @@ class TicketsToDevelopment extends Webhook {
   /**
    * Check if a ticket of type epic is moved from planned to selected for development
    * @param  {Jira Callback} data
-   * @return {Promise{Boolean}}
+   * @return {Promise<Boolean>}
    *   true, if the ticket is an epic and correctly moved
    *   false, otherwise
    */
@@ -130,7 +130,7 @@ class TicketsToDevelopment extends Webhook {
    * 
    * @param  {String} issueKey
    *   e.g. 'KD-10790'
-   * @return {Promise{JiraIssue}}
+   * @return {Promise<JiraIssue>}
    */
   findIssue(issueKey) {
     return this.jira.jira.findIssueAsync(issueKey);
@@ -142,7 +142,7 @@ class TicketsToDevelopment extends Webhook {
    * 
    * @param  {Array{String}} issueKeys
    *   e.g. ['KD-10790', 'KD-8997']
-   * @return {Promise{Array{JiraIssue}}}
+   * @return {Promise<Array<JiraIssue>>}
    */
   getTimeEstimates(issueKeys) {
     return this.jira.jira.searchJiraAsync('key in (' + issueKeys.toString() + ')', { fields: ['timeestimate'] });
@@ -165,7 +165,7 @@ class TicketsToDevelopment extends Webhook {
    * 
    * @param  {String} issueKey
    *   Must be of the type epic, otherwise nothing is returned.
-   * @return {Promise{Array{Issue}}}
+   * @return {Promise<Array<Issue>>}
    *   An array of issues.
    */
   getAllEpicChildren(issueKey) {

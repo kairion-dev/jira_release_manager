@@ -10,13 +10,6 @@ var
 
 chai.use(require('chai-things')); // to test array elements with chai
 
-
-// test plan
-// ---------
-// Still missing:
-// * test logic for invalid calls for
-
-
 // startup jira library
 var JiraApi = require('../../lib/jira.js').Jira;
 var jira = new JiraApi(config.jira, db);
@@ -61,14 +54,6 @@ function generateKDZeroTicket(issueKey, zeroCounter) {
     newCap: false
   };
 }
-
-before(function() {
-
-});
-
-beforeEach(function() {
-
-});
 
 describe('Unit testing', function() {
   var tags1 = [

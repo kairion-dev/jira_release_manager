@@ -13,6 +13,7 @@ class WebhookEngine {
 
   /**
    * Register new webhooks by using a config.
+   * 
    * @param  {Object} configWebhooks
    *   Object that holds the config for all webhooks that should be registered. The structure must look like
    *   { 'webhookId1': { path: '../my/path', params: { 'some': 'parameters'} } }
@@ -37,6 +38,7 @@ class WebhookEngine {
 
   /**
    * Register a webhook module that inherits the abstract-webhook class
+   * 
    * @param  {Webhook} webhook
    * @return {Promise}
    */
@@ -56,6 +58,7 @@ class WebhookEngine {
   /**
    * Call all registered webhooks with the given request.
    * Each webhook checks first if the request structure matches the expected structure before processing the data.
+   * 
    * @param  {Object} request
    *   Some data that should be processed by the registered webhooks
    * @return {Promise}

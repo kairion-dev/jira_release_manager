@@ -12,13 +12,20 @@ class CreateTag extends Webhook {
 
   /**
    * Only process bitbucket requests that contain a repository push.
+   * 
    * @param  {Object} data
-   * @return {Boolean}
+   * @return {Promise<Boolean>}
    */
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.push);
   };
 
+  /**
+   * Reinitialize updated repository in order to get new tags for the release page.
+   * 
+   * @param  {Object} data
+   * @return {Promise}
+   */
   invoke(data) {
     if (!data.repository || !data.repository.name) {
       return Promise.reject('data.repository.name must be defined');

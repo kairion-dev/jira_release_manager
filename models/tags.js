@@ -130,10 +130,10 @@ module.exports = function(tagType) {
   };
   
   /**
-   * Group KD-0 tickets as children to one ticket.
+   * Group KD-xxxx tickets as children to one ticket.
    * 
-   * @param  {Array{Ticket}} tickets
-   * @return {Array{Ticket}}
+   * @param  {Array<Ticket>} tickets
+   * @return {Array<Ticket>}
    *   The exact same tickets as before except all undefined tickets are grouped to a new ticket
    */
   var groupUndefinedTickets = function(tickets) {

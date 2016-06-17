@@ -27,7 +27,7 @@ class TicketsToDeployAfterRelease extends Webhook {
    * Only proceed when an epic ticket is moved to 'deployed'
    * 
    * @param  {Jira Callback} data
-   * @return {Promise{Boolean}}
+   * @return {Promise<Boolean>}
    */
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated')
@@ -70,7 +70,7 @@ class TicketsToDeployAfterRelease extends Webhook {
    * Check if an epic is moved to status 'deployed'
    * 
    * @param  {Object}  data
-   * @return {Promise{Boolean}}
+   * @return {Promise<Boolean>}
    *   true, if ticket is an epic and it has been moved to 'deployed'
    *   false, otherwise
    */
@@ -89,7 +89,7 @@ class TicketsToDeployAfterRelease extends Webhook {
    * 
    * @param  {String} issueKey
    *   Must be of the type epic, otherwise nothing is returned.
-   * @return {Promise{Array{Issue}}}
+   * @return {Promise<Array<Issue>>}
    *   An array of issues.
    */
   getAllEpicChildren(issueKey) {

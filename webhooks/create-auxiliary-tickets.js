@@ -95,7 +95,7 @@ class CreateAuxiliaryTickets extends Webhook {
    * Get the issue with the given key.
    * @param  {String} issuekey
    *   E.g. 'KD-9786'
-   * @return {Promise <Issue>}
+   * @return {Promise<Issue>}
    */
   findIssue(issuekey) {
     return this.jira.jira.findIssueAsync(issuekey);
@@ -103,7 +103,7 @@ class CreateAuxiliaryTickets extends Webhook {
 
   /**
    * Add a new Jira ticket with the given data in issueRequest
-   * @param {Promise <Object>} issueRequest
+   * @param {Promise<Object>} issueRequest
    *   For more detail have a look at: https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-create-issue
    */
   addIssue(issueRequest) {
@@ -113,7 +113,7 @@ class CreateAuxiliaryTickets extends Webhook {
 
   /**
    * Get the names of the different issue types stored in Jira and link them to their ids.
-   * @return {Promise <Object>}
+   * @return {Promise<Object>}
    *   E.g. { '2' => 'Deployment', '10500' => 'Concept / Roadmap', ...}
    */
   initIssueTypeNames() {

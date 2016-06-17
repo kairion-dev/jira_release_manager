@@ -23,8 +23,9 @@ class StatusToDevelopOnTimetracking extends Webhook {
 
   /**
    * Proceed when time is tracked and ticket is not planned yet
+   * 
    * @param  {Object} data
-   * @return {Promise{Boolean}}
+   * @return {Promise<Boolean>}
    */
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated')
@@ -41,6 +42,7 @@ class StatusToDevelopOnTimetracking extends Webhook {
 
   /**
    * Set status of ticket to 'Selected for development' as soon as time is tracked on the ticket
+   * 
    * @param  {Jira Callback} data
    *   Have a look at https://developer.atlassian.com/jiradev/jira-apis/webhooks
    * @return {Promise}

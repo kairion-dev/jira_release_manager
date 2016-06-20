@@ -93,7 +93,8 @@ module.exports = function(tagType) {
           tickets.features.sort((a,b) => { return a.key < b.key });
           tickets.bugfixes.sort((a,b) => { return a.key < b.key });
           tickets.quickfixes = quickfixes;
-          return { repo: doc.repository, tickets: tickets, release: doc.release, manual_changes: doc.manual_changes };
+          var manual_changes = doc.manual_changes || [];
+          return { repo: doc.repository, tickets: tickets, release: doc.release, manual_changes: manual_changes };
         })
     });
   };

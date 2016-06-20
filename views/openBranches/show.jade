@@ -5,4 +5,4 @@ block content
     h1.page-header= title
     
     each doc in docs
-        +repoTickets('repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets)
+        +repoTickets('repo/' + doc.repo + '/' + tag, doc.repo, doc.tickets, doc.manual_changes)

@@ -1,0 +1,37 @@
+extends ../layout
+
+mixin modalWebhookDetails(id, webhook)
+  a(data-toggle="modal", title="Details", data-target="#" + id, href="#")= id
+  div(id=id, tabIndex="-1", role="dialog", aria-labelledby="Details", aria-hidden="true").modal
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button(type="button", data-dismiss="modal", aria-label="Close").close
+            span(aria-hidden="true").glyphicon.glyphicon-remove
+          h4.modal-title Webhook details for "#{id}"
+        .modal-body
+          p Some more details are coming soon
+
+block content
+    h1.page-header= title
+    each engine, engineId in engines
+      .panel.panel-default
+        .panel-heading Webhook-Engine: #{engineId}
+        .panel-body
+          p The following webhooks are currently running on this engine:
+          .table-responsive
+            table.table.table-condensed
+              thead
+                tr
+                  th Webhook
+                  th Invokes
+                  th Errors
+                  th Last time invoked
+              tbody
+                each webhookId in Object.keys(engine)
+                  tr
+                    td
+                      +modalWebhookDetails(webhookId, engine[webhookId])
+                    td= engine[webhookId].data.invoked
+                    td= engine[webhookId].data.errors
+                    td= engine[webhookId].data.last_time_invoked

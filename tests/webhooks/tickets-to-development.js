@@ -178,9 +178,9 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 		delete request.issue.key;
 		return engine.invoke(request)
 			.then((res) => {
-				res.should.have.lengthOf(1);
-				res[0].should.have.property('success', false);
-				res[0].should.have.property('error', 'Invalid request. It should at least contain issue.key');
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+				res.webhookResults['tickets-to-development'].should.have.property('success', false);
+				res.webhookResults['tickets-to-development'].should.have.property('error', 'Invalid request. It should at least contain issue.key');
 			})
 	});
 	it('Should not be executed because issue is not updated', function() {
@@ -188,8 +188,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 		request.webhookEvent = 'jira:some_other_action';
 		return engine.invoke(request)
 			.then((res) => {
-				res.should.have.lengthOf(1);
-				expect(res[0]).to.be.undefined;
+				Object.keys(res.webhookResults).should.have.lengthOf(0);
 			});
 	});
   it.skip('Should not be executed because issue is not an epic', function() {
@@ -198,20 +197,21 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
   it("Should move two of four epic children to 'Selected for development'", function() {
     return engine.invoke(validWebhookRequest)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        res[0].should.have.property('id', 'tickets-to-development');
-        res[0].should.have.property('success', true);
-        res[0].should.have.property('result');
-        res[0].result.should.have.lengthOf(5);
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+        var webhookResult = res.webhookResults['tickets-to-development'];
+        webhookResult.should.have.property('id', 'tickets-to-development');
+        webhookResult.should.have.property('success', true);
+        webhookResult.should.have.property('result');
+        webhookResult.result.should.have.lengthOf(5);
         // first and fifth child should be moved because they were not planned
-        checkTransition(res[0].result[0], 'KD-1111', jiraTransitionSelectedForDevelopment);
-        checkTransition(res[0].result[4], 'KD-3333', jiraTransitionSelectedForDevelopment);
+        checkTransition(webhookResult.result[0], 'KD-1111', jiraTransitionSelectedForDevelopment);
+        checkTransition(webhookResult.result[4], 'KD-3333', jiraTransitionSelectedForDevelopment);
         // second child has some other status and thus nothing should happen
-        expect(res[0].result[1]).to.be.undefined;
+        expect(webhookResult.result[1]).to.be.undefined;
         // third child has no time estimated which results in an error response. Nevertheless other children should not be affected from this.
-        expect(res[0].result[2]).to.be.undefined;
+        expect(webhookResult.result[2]).to.be.undefined;
         // the estimated time for the fourth child could not be set which results in an error reponse.
-        expect(res[0].result[3]).to.be.undefined;
+        expect(webhookResult.result[3]).to.be.undefined;
       });
   });
   describe("Test tryToInitTimeEstimate()", function() {

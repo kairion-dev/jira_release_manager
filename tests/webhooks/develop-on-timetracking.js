@@ -55,9 +55,9 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
     delete request.issue.key;
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        res[0].should.have.property('success', false);
-        res[0].should.have.property('error', 'Invalid request. It should at least contain issue.key');
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+        res.webhookResults['develop-on-timetracking'].should.have.property('success', false);
+        res.webhookResults['develop-on-timetracking'].should.have.property('error', 'Invalid request. It should at least contain issue.key');
       })
   });
   it('Should not be executed because issue is not updated', function() {
@@ -65,8 +65,7 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
     request.webhookEvent = 'jira:some_other_action';
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        expect(res[0]).to.be.undefined;
+        Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it('Should not be executed because no time tracking', function() {
@@ -74,15 +73,13 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
     request.issue.fields.timespent = null;
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        expect(res[0]).to.be.undefined;
+        Object.keys(res.webhookResults).should.have.lengthOf(0);
 
         request.issue.fields.timespent = 0;
         return engine.invoke(request);
       })
       .then((res) => {
-        res.should.have.lengthOf(1);
-        expect(res[0]).to.be.undefined;
+        Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it("Should not be executed because issue status is not on 'Not planned'", function() {
@@ -90,21 +87,20 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
     request.issue.fields.status.id = '12345';
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        expect(res[0]).to.be.undefined;
+        Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it("Should set status to 'Selected for development' when time is tracked on unplanned ticket", function() {
     return engine.invoke(validWebhookRequest)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        res[0].should.have.property('id', 'develop-on-timetracking');
-        res[0].should.have.property('success', true);
-        res[0].should.have.property('result');
-        res[0].result.should.have.property('issueKey', 'KD-10035');
-        res[0].result.should.have.property('request');
-        res[0].result.request.should.have.property('transition');
-        res[0].result.request.transition.should.have.property('id', '911');
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+        res.webhookResults['develop-on-timetracking'].should.have.property('id', 'develop-on-timetracking');
+        res.webhookResults['develop-on-timetracking'].should.have.property('success', true);
+        res.webhookResults['develop-on-timetracking'].should.have.property('result');
+        res.webhookResults['develop-on-timetracking'].result.should.have.property('issueKey', 'KD-10035');
+        res.webhookResults['develop-on-timetracking'].result.should.have.property('request');
+        res.webhookResults['develop-on-timetracking'].result.request.should.have.property('transition');
+        res.webhookResults['develop-on-timetracking'].result.request.transition.should.have.property('id', '911');
       });
   });
 });

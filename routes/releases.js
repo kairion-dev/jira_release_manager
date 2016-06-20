@@ -110,7 +110,7 @@ router.get('/repo/:repo/:tag', function(req, res, next) {
   model.getTagDoc(req.params.repo, req.params.tag)
     .then((release) => {
       var templateVariables = {
-        title: 'Release ' + req.params.tag,
+        title: 'Release Plan ' + req.params.tag + ' - '  + req.params.repo,
         tickets: [],
         menuSelected: 'menu-releases-plan',
         breadcrumbs: [

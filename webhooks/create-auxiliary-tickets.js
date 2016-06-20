@@ -80,7 +80,7 @@ class CreateAuxiliaryTickets extends Webhook {
     return Promise.map(auxiliaryIssueTypeIds, (issueTypeId) => {
         var summary = issue.fields.summary.replace('Workpackage:', this.issueTypeNames[issueTypeId] + ':');
         var request = this.kjiraHelper.createAuxiliaryIssueRequest(
-          issue.fields.project.key, 
+          issue.fields.project.key,
           issueTypeId,
           summary.trim(),
           issue.fields.assignee.name,

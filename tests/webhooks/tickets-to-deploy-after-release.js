@@ -110,9 +110,9 @@ describe("Webhook 'Tickets to deploy after release'", function() {
     delete request.issue.key;
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        res[0].should.have.property('success', false);
-        res[0].should.have.property('error', 'Invalid request. It should at least contain issue.key');
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+        res.webhookResults['tickets-to-deployed-after-release'].should.have.property('success', false);
+        res.webhookResults['tickets-to-deployed-after-release'].should.have.property('error', 'Invalid request. It should at least contain issue.key');
       })
   });
   it('Should not be executed because issue is not updated', function() {
@@ -120,23 +120,23 @@ describe("Webhook 'Tickets to deploy after release'", function() {
     request.webhookEvent = 'jira:some_other_action';
     return engine.invoke(request)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        expect(res[0]).to.be.undefined;
+        Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it("Should move three of four epic children to 'Deployed'", function() {
     return engine.invoke(validWebhookRequest)
       .then((res) => {
-        res.should.have.lengthOf(1);
-        res[0].should.have.property('id', 'tickets-to-deployed-after-release');
-        res[0].should.have.property('success', true);
-        res[0].should.have.property('result');
-        res[0].result.should.have.lengthOf(4);
-        checkTransition(res[0].result[0], 'KD-1111', jiraTransitionDeployed);
-        checkTransition(res[0].result[2], 'KD-2222', jiraTransitionDeployed);
-        checkTransition(res[0].result[3], 'KD-3333', jiraTransitionDeployed);
+        Object.keys(res.webhookResults).should.have.lengthOf(1);
+        var webhookResult = res.webhookResults['tickets-to-deployed-after-release'];
+        webhookResult.should.have.property('id', 'tickets-to-deployed-after-release');
+        webhookResult.should.have.property('success', true);
+        webhookResult.should.have.property('result');
+        webhookResult.result.should.have.lengthOf(4);
+        checkTransition(webhookResult.result[0], 'KD-1111', jiraTransitionDeployed);
+        checkTransition(webhookResult.result[2], 'KD-2222', jiraTransitionDeployed);
+        checkTransition(webhookResult.result[3], 'KD-3333', jiraTransitionDeployed);
         // KD-4444 could not be moved which should not have affected the other children
-        expect(res[0].result[1]).to.be.undefined;
+        expect(webhookResult.result[1]).to.be.undefined;
       });
   });
 });

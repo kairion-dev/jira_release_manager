@@ -177,8 +177,8 @@ describe("Webhook 'Update Ticket'", function() {
         }
       }))
       .then((res) => {
-        res[0].should.have.property('id', 'update-ticket');
-        res[0].should.have.property('success', true);
+        res.webhookResults['update-ticket'].should.have.property('id', 'update-ticket');
+        res.webhookResults['update-ticket'].should.have.property('success', true);
         return db.tickets.findAsync({ })
       })
       .then((docs) => {
@@ -205,8 +205,8 @@ describe("Webhook 'Update Ticket'", function() {
         }
       }))
       .then((res) => {
-        res[0].should.have.property('id', 'update-ticket');
-        res[0].should.have.property('success', true);
+        res.webhookResults['update-ticket'].should.have.property('id', 'update-ticket');
+        res.webhookResults['update-ticket'].should.have.property('success', true);
         return db.tickets.findAsync({ })
       })
       .then((docs) => {

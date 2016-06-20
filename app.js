@@ -20,12 +20,13 @@ function init(jira) {
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
   app.use(logger('dev'));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
   app.use(express.static(path.join(__dirname, 'public')));
-  app.use('/bower_components', express.static(path.join(__dirname, 'bower_components')))
+  app.use('/bower_components', express.static(path.join(__dirname, 'bower_components')));
 
   app.use(function(req, res, next) {
     // req.db = db;
@@ -33,7 +34,8 @@ function init(jira) {
     res.locals.menuItems = [
       // { id: 'menu-releases-repo', name: 'Releases', href: '/releases/repo/' + res.locals.repositories.selected }, // we don't want 'releases' right now
       { id: 'menu-releases-plan', name: 'Release Plans', href: '/releases/plan' },
-      { id: 'menu-open-branches', name: 'Open Branches', href: '/openBranches' }
+      { id: 'menu-open-branches', name: 'Open Branches', href: '/openBranches' },
+      // { id: 'menu-webhooks', name: 'Webhooks', href: '/webhooks/show' } // uncomment to show webhooks link in menu
     ];
     next();
   });

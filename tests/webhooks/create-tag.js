@@ -51,30 +51,29 @@ describe("Webhook 'Create Tag'", function() {
       return engine.registerByConfig(config.get('webhooks.bitbucket'))
         .then(() => engine.invoke())
         .then((res) => {
-          res.should.have.lengthOf(1);
-          expect(res[0]).to.be.undefined;
+          Object.keys(res.webhookResults).should.have.lengthOf(0);
         });
     });
     it('should fail if no repository name is defined in request', function() {
       return engine.registerByConfig(config.get('webhooks.bitbucket'))
         .then(() => engine.invoke({ push: { what: 'ever' }}))
         .then((res) => {
-          res.should.have.lengthOf(1);
-          res[0].should.have.property('success');
-          res[0].success.should.equal(false);
-          res[0].should.have.property('error');
-          res[0].error.should.equal('data.repository.name must be defined');
+          Object.keys(res.webhookResults).should.have.lengthOf(1);
+          res.webhookResults['create-tag'].should.have.property('success');
+          res.webhookResults['create-tag'].success.should.equal(false);
+          res.webhookResults['create-tag'].should.have.property('error');
+          res.webhookResults['create-tag'].error.should.equal('data.repository.name must be defined');
         });
     });
     it('should fail if repository name is not known in configs', function() {
       return engine.registerByConfig(config.get('webhooks.bitbucket'))
         .then(() => engine.invoke({ push: { what: 'ever' }, repository: { name: 'invalid_repo' } }))
         .then((res) => {
-          res.should.have.lengthOf(1);
-          res[0].should.have.property('success');
-          res[0].success.should.equal(false);
-          res[0].should.have.property('error');
-          res[0].error.should.equal("config does not contain a repository called 'invalid_repo'");
+          Object.keys(res.webhookResults).should.have.lengthOf(1);
+          res.webhookResults['create-tag'].should.have.property('success');
+          res.webhookResults['create-tag'].success.should.equal(false);
+          res.webhookResults['create-tag'].should.have.property('error');
+          res.webhookResults['create-tag'].error.should.equal("config does not contain a repository called 'invalid_repo'");
         });
     });
   });

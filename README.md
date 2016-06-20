@@ -41,6 +41,7 @@ JRM is a tool to show all Jira tickets between two git tags (releases).
 * Move tickets to deployed, after release
 * API call to set release date (e.g. add call to Jenkins deployment script)
 * Add possibility to add "Manual Changes" section (maybe from commit message?)
+* Auto-initialize repositories inside the release-manager instead of cloning them externally before starting
 
 ### Kairion specific ideas / ToDos
 

@@ -139,9 +139,9 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       it('should work with a valid webhook request', function() {
         return engine.invoke(validWebhookRequest)
           .then((res) => {
-            res.should.have.lengthOf(1);
-            res[0].should.have.property('success', true);
-            res[0].should.have.property('id', 'create-auxiliary-tickets');
+            Object.keys(res.webhookResults).should.have.lengthOf(1);
+            res.webhookResults['create-auxiliary-tickets'].should.have.property('success', true);
+            res.webhookResults['create-auxiliary-tickets'].should.have.property('id', 'create-auxiliary-tickets');
           })
       });
       it('should not be executed when key is missing', function() {
@@ -149,9 +149,9 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
         delete invalidRequest.issue;
         return engine.invoke(invalidRequest)
           .then((res) => {
-            res.should.have.lengthOf(1);
-            res[0].should.have.property('success', false);
-            res[0].should.have.property('error', 'Request malformed. It should at least contain issue.key');
+            Object.keys(res.webhookResults).should.have.lengthOf(1);
+            res.webhookResults['create-auxiliary-tickets'].should.have.property('success', false);
+            res.webhookResults['create-auxiliary-tickets'].should.have.property('error', 'Request malformed. It should at least contain issue.key');
           })
       });
       it('should not be executed when key is not found in Jira', function() {
@@ -159,8 +159,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
         request.issue.key = 'does not exist';
         return engine.invoke(request)
           .then((res) => {
-            res.should.have.lengthOf(1);
-            expect(res[0]).to.be.undefined;
+            Object.keys(res.webhookResults).should.have.lengthOf(0);
           })
       });
       it('should not be executed when created issue is no epic', function() {
@@ -168,8 +167,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
         request.issue.key = 'KTEST-1111';
         return engine.invoke(request)
           .then((res) => {
-            res.should.have.lengthOf(1);
-            expect(res[0]).to.be.undefined;
+            Object.keys(res.webhookResults).should.have.lengthOf(0);
           })
       });
     });
@@ -177,8 +175,8 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       it('Test Jira Rest API requests to add auxiliary tickets', function() {
         return engine.invoke(validWebhookRequest)
           .then((res) => {
-            res.should.have.lengthOf(1);
-            var tickets = res[0].result;
+            Object.keys(res.webhookResults).should.have.lengthOf(1);
+            var tickets = res.webhookResults['create-auxiliary-tickets'].result;
             tickets.should.have.lengthOf(4); // we expect 4 ticket requests
             tickets = tickets.map((ticket) => ticket.fields); // remove one level to directly access properties
             tickets = helper.arrayToObject(tickets, 'summary'); // to access tickets more easy

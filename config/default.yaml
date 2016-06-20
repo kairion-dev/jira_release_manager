@@ -7,6 +7,7 @@ log:
 databases:
   tags: 'tests/data/temp-dbs/tags'
   tickets: 'tests/data/temp-dbs/tickets'
+  webhooks: 'tests/data/temp-dbs/webhooks-data'
 jira:
   host: 'kairion.atlassian.net'
   epicsKey: 'customfield_10500'

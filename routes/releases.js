@@ -2,7 +2,7 @@ var
   express = require('express'),
   Promise = require('bluebird'),
   router = express.Router(),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').releasemanager,
   model = require('../models/tags.js')('release');
 
 router.get('/repo/:repo', function(req, res, next) {

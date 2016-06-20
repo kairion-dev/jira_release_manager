@@ -5,7 +5,7 @@ var
   config = require('config'),
   db = require('../lib/db.js').db(),
   Core = require('../lib/core.js'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   Webhook = require('./abstract-webhook');
 
 class TicketsToDeployAfterRelease extends Webhook {

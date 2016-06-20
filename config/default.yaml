@@ -2,8 +2,12 @@ http:
   host: localhost
   port: 3000
 log:
-  level: 'info'
-  filename: '/tmp/jrm.log'
+  releasemanager:
+    level: 'info'
+    filename: 'jrm.log'
+  webhooks:
+    level: 'info'
+    filename: 'webhooks.log'
 databases:
   tags: 'tests/data/temp-dbs/tags'
   tickets: 'tests/data/temp-dbs/tickets'

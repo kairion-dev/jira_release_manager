@@ -2,7 +2,7 @@ var
   express = require('express'),
   Promise = require('bluebird'),
   router = express.Router(),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   config = require('config'),
   WebhookEngine = require('../webhooks/webhook-engine');
 
@@ -48,6 +48,7 @@ router.post('/bitbucket', function(req, res, next) {
 
   // invoke the registered webhooks with the data posted by Bitbucket
   return engines['bitbucket'].invoke(req.body)
+    .then((res) => log.info(res))
     .catch((e) => log.warn("Execution warning for '" + e.id + "': " + e.error));
 });
 

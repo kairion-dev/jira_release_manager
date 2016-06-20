@@ -2,7 +2,7 @@
 
 var
   Promise = require('bluebird'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   Webhook = require('./abstract-webhook');
 
 class LoggerIssueUpdated extends Webhook {

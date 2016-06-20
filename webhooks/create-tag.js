@@ -38,9 +38,9 @@ class CreateTag extends Webhook {
 
     var gitPath = config.get('git.repositories.' + repoId + '.path');
     var spawn = require('child-process-promise').spawn;
-    var args = [ '--git-dir', gitPath , 'fetch' ];
 
-    return spawn('git', args, { capture: [ 'stdout', 'stderr' ] })
+    return spawn('git', [ '--git-dir', gitPath, 'remote', 'prune', 'origin' ]) // delete all local repositories that have already been deleted remotely
+      .then(() => spawn('git', [ '--git-dir', gitPath , 'fetch' ], { capture: [ 'stdout', 'stderr' ] }))
       .then((res) => {
         log.info("git fetch for repo '" + repoId + "' " + res.stdout + " " + res.stderr);
         return core.initRepository(repoId); 

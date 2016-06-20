@@ -4,8 +4,8 @@ var
   Promise = require('bluebird'),
   AbstractWebhook = require('./abstract-webhook'),
   db = require('../lib/db.js').db(),
-  log = require('../lib/logger.js');
-
+  log = require('../lib/logger.js').webhooks;
+  
 
 class WebhookEngine {
 
@@ -79,7 +79,7 @@ class WebhookEngine {
           }
         })
         .catch((e) => {
-          return { id: webhook.id, success: false, error: e };
+          return { id: webhook.id, success: false, error: e.toString() };
         });
     })
       // map results array to 'webhookId -> result' structure

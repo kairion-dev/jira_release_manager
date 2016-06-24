@@ -74,19 +74,18 @@ class TicketsToDevelopment extends Webhook {
 
   /**
    * Check if a ticket of type epic is moved from planned to selected for development
+   * 
    * @param  {Jira Callback} data
    * @return {Promise<Boolean>}
    *   true, if the ticket is an epic and correctly moved
    *   false, otherwise
    */
   epicMovedFromNotPlannedToDevelopment(data) {
-    return Promise.filter(data.changelog.items, (item) => {
-      return item.field == 'status';
-    })
-      .then((res) => {
-        return data.issue.fields.issuetype.id == config.get('jira.issueType.epic') &&
-          res.length > 0 && res[0].to == this.statusSelectedForDevelopment;
-      });
+    var items = data.changelog && data.changelog.items ? data.changelog.items : [];
+    // returns true if at least one item fullfils the requirements
+    return Promise.reduce(items, (result, item) => {
+      return result || (item.field == 'status' && data.issue.fields.issuetype.id == config.get('jira.issueType.epic') && item.to == this.statusSelectedForDevelopment);
+    }, false);
   }
 
 

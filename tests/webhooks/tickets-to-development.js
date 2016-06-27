@@ -6,7 +6,7 @@ var
 	expect = chai.expect,
 	Promise = require('bluebird'),
 	db = require('../../lib/db.js').db(require('config')),
-	WebhookEngine = require('../../webhooks/webhook-engine.js'),
+	WebhookEngine = require('../../webhooks/webhook-engine-instance.js'),
 	Webhook = require('../../webhooks/tickets-to-development.js'),
 	sinon = require('sinon'),
 	helper = require('../helper/common.js');

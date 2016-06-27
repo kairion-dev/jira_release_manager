@@ -5,7 +5,7 @@ var
   should = chai.should(),
   Promise = require('bluebird'),
   db = require('../../lib/db.js').db(require('config')),
-  WebhookEngine = require('../../webhooks/webhook-engine.js'),
+  WebhookEngine = require('../../webhooks/webhook-engine-instance.js'),
   helper = require('../helper/common.js');
 
 let tickets1 = [
@@ -117,7 +117,7 @@ describe("Webhook 'Update Ticket'", function() {
       })
   });
   it('Updating epicsKey defined by customfield should work', function() {
-    return engine.registerByConfig(config, { epicsKey: 'customfield_10500'})
+    return engine.registerByConfig(config)
       .then(() => engine.invoke({
         webhookEvent: 'jira:issue_updated',
         issue: {

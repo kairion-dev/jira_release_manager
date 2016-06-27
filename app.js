@@ -4,24 +4,25 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
+var config = require('config');
 
 var routes = require('./routes/index');
 var releases = require('./routes/releases');
 var openBranches = require('./routes/openBranches');
-var webhooks = require('./routes/webhooks');
+
+
+var WebhookEngine = require('./webhooks/webhook-engine');
 
 
 function init(jira) {
   var app = express();
 
-// view engine setup
+  // view engine setup
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'jade');
 
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
-  app.use(logger('dev'));
+  // app.use(logger('dev')); // uncomment to see HTTP request debug
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -43,7 +44,10 @@ function init(jira) {
   app.use('/', routes);
   app.use('/releases', releases);
   app.use('/openBranches', openBranches);
-  app.use('/webhooks', webhooks);
+  
+  // init new webhook engine including webhooks and routes by using config properties
+  var engine = new WebhookEngine();
+  app.use('/webhooks', engine.init(config.get('webhooks')));
 
 // catch 404 and forward to error handler
   app.use(function(req, res, next) {

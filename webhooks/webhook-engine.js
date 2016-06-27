@@ -2,138 +2,99 @@
 
 var
   Promise = require('bluebird'),
-  AbstractWebhook = require('./abstract-webhook'),
+  express = require('express'),
+  router = express.Router(),
   db = require('../lib/db.js').db(),
-  log = require('../lib/logger.js').webhooks;
-  
+  log = require('../lib/logger.js').webhooks,
+  WebhookEngineInstance = require('../webhooks/webhook-engine-instance.js');
 
 class WebhookEngine {
 
   constructor() {
-    this.webhooks = {};
+    this.instances = {};
   }
 
   /**
-   * Register new webhooks by using a config.
+   * Init webhook engine by registering all necessary routes and potential webhooks given by the config.
    * 
-   * @param  {Object} configWebhooks
-   *   Object that holds the config for all webhooks that should be registered. The structure must look like
-   *   { 'webhookId1': { path: '../my/path', params: { 'some': 'parameters'} } }
-   *   The params properties are automatically added by the abstract webhook constructor and available in the specific webhook.
-   * @param  {Object} additionalParams
-   *   Additional parameters that are added to each config taken from configWebhooks. This way you can add params subsequently.
-   * @return {Promise}
+   * @param  {[type]} config
+   *   is an optional parameter if instances have already been initiated before
+   * @return {Router}
+   *   express router, that can be used by calling app.use('/webhooks', WebhookEngine.init(config))
    */
-  registerByConfig(configWebhooks, additionalParams) {
-    return Promise.map(Object.keys(configWebhooks), (id) => {
-      var config = configWebhooks[id];
-      // append additional params to existing ones
-      let params = Object.keys(additionalParams || {}).reduce((results, key) => {
-        results[key] = additionalParams[key];
-        return results;
-      }, config.params || {});
-      // load module and register it with the id and config.params
-      var Webhook = require(config.path);
-      return this.register(new Webhook(id, params));
-    });
-  }
-
-  /**
-   * Register a webhook module that inherits the abstract-webhook class
-   * 
-   * @param  {Webhook} webhook
-   * @return {Promise}
-   */
-  register(webhook) {
-    if (!(webhook instanceof AbstractWebhook)) {
-      return Promise.reject("The given webhook must be an instance of AbstractWebhook");
-    };
-    if (Object.keys(this.webhooks).indexOf(webhook.id) == -1) {
-      log.info('Register webhook', webhook.id, webhook.params);
-      return Promise.resolve(this.webhooks[webhook.id] = webhook)
-        .then(() => this.webhooks[webhook.id].init());
-    } else {
-      return Promise.reject("Could not register '" + webhook.id + "' because a webhook already exists with same id.");
+  init(config) {
+    // if we have a config, try to register new instances by using it
+    if (config) {
+      Object.keys(config).forEach((id) => {
+        this.newInstance(id, '/' + id, config[id]);
+      })
     }
-  }
 
-  /**
-   * Call all registered webhooks with the given request.
-   * Each webhook checks first if the request structure matches the expected structure before processing the data.
-   * 
-   * @param  {Object} request
-   *   Some data that should be processed by the registered webhooks
-   * @return {Promise}
-   */
-  invoke(request) {
-    var timestamp = Date.now();
-    return Promise.map(Object.keys(this.webhooks), (key) => {
-      let webhook = this.webhooks[key];
-      return webhook.shouldBeExecuted(request)
-        .then((execute) => {
-          if (execute) {
-            return webhook.invoke(request)
-              .then((res) => {
-                return { id: webhook.id, success: true, result: res };
-              })
-          }
-        })
-        .catch((e) => {
-          return { id: webhook.id, success: false, error: e.toString() };
-        });
-    })
-      // map results array to 'webhookId -> result' structure
-      .then((webhookResults) => Promise.reduce(webhookResults, (results, current) => {
-        // filter webhooks that have not been invoked
-        if (current) {
-          results[current.id] = current;
-        }
-        return results;
-      }, {}))
-      // save webhook results and return them
-      .then((webhookResults) => {
-        return Promise.map(Object.keys(webhookResults), (key) => {
-          let res = webhookResults[key];
-          let update = {
-            $inc: {
-              invoked: 1,
-              errors: (res.success ? 0 : 1)
-            },
-            $set: {
-              last_time_invoked: timestamp
-            }
+    if (Object.keys(this.instances).length === 0) {
+      throw new Error('No webhook engine instance registered. Please use WebhookEngine.newInstance() or provide a config in WebhookEngine.init()');
+    }
+
+    /**
+     * Show details about all webhook engines including running webhooks 
+     */
+    router.get('/show', (req, res, next) => {
+      return Promise.reduce(Object.keys(this.instances), (data, id) => {
+        return this.instances[id].getWebhooksData()
+          .then((webhooksData) => {
+            data[id] = webhooksData;
+            return data;
+          })
+      }, {})
+      .then((instancesData) => {
+        log.info(instancesData);
+        var templateVars = {
+            title: 'Webhooks',
+            engines: instancesData
           };
-          return db.webhooks.updateAsync({ id: res.id }, update, { upsert: true });
-        })
-          // return structured results for further processing
-          .then(() => {
-            return { timestamp: timestamp, webhookResults: webhookResults };
-          });
-      });
+        res.render('webhooks/show', templateVars)
+      })
+    });
+
+    return router;
   }
 
   /**
-   * Get statistical data for all registered webhooks.
+   * Create a new service instance in order to register webhooks.
+   * Example:
+   *   id = 'jira', route = '/jira', config = { webhook1: ... , webhook2: ... }
+   *   creates a new service with id 'jira' and
+   *   registers webhook1 and webhook2 to listen on http://yourhost/webhooks/jira requests
    * 
-   * @return {Promise{WebhooksData}}
+   * @param  {String} id
+   * @param  {String} route
+   * @param  {Object} config
    */
-  getWebhooksData() {
-    var result = {};
-    return Promise.each(Object.keys(this.webhooks), (webhookId) => {
-      result[webhookId] = { params: this.webhooks[webhookId].params };
-      return db.webhooks.findOneAsync({ id: webhookId })
-        .then((data) => {
-          var invoked = data && data.invoked || 0;
-          var errors = data && data.errors || 0;
-          var last_time_invoked = '';
-          if (data && data.last_time_invoked) {
-            var date = new Date(data.last_time_invoked);
-            last_time_invoked = date.toString();
-          }
-          result[webhookId]['data'] = { invoked: invoked, errors: errors, last_time_invoked: last_time_invoked };
-        })
-    })
-    .then(() => result);
+  newInstance(id, route, config) {
+    this.instances[id] = new WebhookEngineInstance();
+    this.instances[id].registerByConfig(config);
+    var routeFn = this.initRoute(this.instances[id]);
+    router.post(route, routeFn);
+  }
+
+  /**
+   * Return new route that should invoke the given instance.
+   * 
+   * @param  {WebhookEngineInstance} instance
+   *   the instance that should be handled by the route
+   * @return {Route}
+   *   the route function that can be used by express
+   */
+  initRoute(instance) {
+    return function(req, res, next) {
+      // respond to server first before processing the incoming data
+      res.status(200);
+      res.send();
+
+      // invoke the registered webhooks with the data posted by JIRA
+      return instance.invoke(req.body)
+        .then((res) => log.info(res))
+        .catch((e) => log.warn("Execution warning for '" + e.id + "': " + e.error))
+    };
   }
 
 }

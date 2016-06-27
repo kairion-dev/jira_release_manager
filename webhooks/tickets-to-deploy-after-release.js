@@ -23,6 +23,10 @@ class TicketsToDeployAfterRelease extends Webhook {
     this.transitionDeployed = config.get('jira.transition.deployed');
   }
 
+  description() {
+    return 'As soon as an epic ticket is moved to "Deployed", all children are also moved.';
+  }
+
   /**
    * Only proceed when an epic ticket is moved to 'deployed'
    * 

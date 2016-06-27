@@ -25,6 +25,11 @@ class TicketsToDevelopment extends Webhook {
   }
 
 
+  description() {
+    return 'Is executed as soon as an epic ticket is moved from "Not Planned" to "Selected For Development". Moves all children, which means normal tickets and subtickets, to "Selected For Development" if not yet planned.';
+  }
+
+
   /**
    * Only proceed when an epic ticket is moved from 'Not Planned' to 'Selected For Development'
    * 

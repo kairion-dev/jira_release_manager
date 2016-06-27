@@ -17,6 +17,10 @@ class LoggerIssueUpdated extends Webhook {
     return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated');
   }
 
+  description() {
+    return 'Just logs all incoming "jira:issue_updated" requests';
+  }
+
   /**
    * Just return the incoming data in order to log it.
    * 

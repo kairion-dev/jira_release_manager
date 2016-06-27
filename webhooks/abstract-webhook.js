@@ -20,6 +20,16 @@ class Webhook {
 
 
   /**
+   * Return a short description about the purpose of the implemented webhook.
+   * 
+   * @return {String}
+   */
+  description() {
+    return 'Webhook does not have any description';
+  }
+
+
+  /**
    * Init webhook, e.g. while it is registered by the webhook-engine.
    * 
    * @return {Promise}
@@ -40,6 +50,7 @@ class Webhook {
   shouldBeExecuted(data) {
     return Promise.resolve(true); // by default the webhook is invoked
   }
+
 
 /**
  * Invoke the webhook and process the data. This is the method that provides the webhook logic.

@@ -22,6 +22,10 @@ class CreateAuxiliaryTickets extends Webhook {
     this.kjiraHelper = new KJiraHelper();
   }
 
+  description() {
+    return 'Once an epic is created in Jira, add the following auxiliary tickets: Deployment, Code Review, Functional Review and Roadmap Planning.';
+  }
+
 
   /**
    * Load mapping between issueTypeIds -> issueTypeNames for later use

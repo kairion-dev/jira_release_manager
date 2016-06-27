@@ -20,6 +20,10 @@ class CreateTag extends Webhook {
     return Promise.resolve(data && data.push);
   };
 
+  description() {
+    return 'Reinitialize repository if data is pushed in order to get new tags for the release page.';
+  }
+
   /**
    * Reinitialize updated repository in order to get new tags for the release page.
    * 

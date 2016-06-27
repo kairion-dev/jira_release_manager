@@ -113,7 +113,10 @@ class WebhookEngineInstance {
   getWebhooksData() {
     var result = {};
     return Promise.each(Object.keys(this.webhooks), (webhookId) => {
-      result[webhookId] = { params: this.webhooks[webhookId].params };
+      result[webhookId] = {
+        params: this.webhooks[webhookId].params,
+        description: this.webhooks[webhookId].description()
+      };
       return db.webhooks.findOneAsync({ id: webhookId })
         .then((data) => {
           var invoked = data && data.invoked || 0;
@@ -123,7 +126,11 @@ class WebhookEngineInstance {
             var date = new Date(data.last_time_invoked);
             last_time_invoked = date.toString();
           }
-          result[webhookId]['data'] = { invoked: invoked, errors: errors, last_time_invoked: last_time_invoked };
+          result[webhookId]['data'] = {
+            invoked: invoked,
+            errors: errors,
+            last_time_invoked: last_time_invoked
+          };
         })
     })
     .then(() => result);

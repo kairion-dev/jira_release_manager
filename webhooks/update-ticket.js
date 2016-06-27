@@ -23,6 +23,10 @@ class UpdateTicket extends Webhook {
     super(id, params);
   }
 
+  description() {
+    return 'Update ticket properties in the release-manager as soon as the corresponding Jira ticket is updated.';
+  }
+
   /**
    * Only process jira requests which have updated an issue
    * @param  {Object} data

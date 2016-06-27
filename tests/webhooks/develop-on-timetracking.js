@@ -8,7 +8,7 @@ var
   db = require('../../lib/db.js').db(require('config')),
   Core = require('../../lib/core.js'),
   KJiraHelper = require('../../lib/kjira-helper.js'),
-  WebhookEngine = require('../../webhooks/webhook-engine-instance.js'),
+  WebhookEngine = require('../../lib/webhook-engine-instance.js'),
   Webhook = require('../../webhooks/develop-on-timetracking.js'),
   sinon = require('sinon'),
   helper = require('../helper/common.js');

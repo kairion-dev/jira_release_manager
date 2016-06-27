@@ -5,7 +5,7 @@ var
   should = chai.should(),
   Promise = require('bluebird'),
   db = require('../../lib/db.js').db(require('config')),
-  WebhookEngine = require('../../webhooks/webhook-engine-instance.js'),
+  WebhookEngine = require('../../lib/webhook-engine-instance.js'),
   helper = require('../helper/common.js');
 
 let tickets1 = [
@@ -14,7 +14,7 @@ let tickets1 = [
 ];
 
 let config = {
-  'update-ticket': { path: './update-ticket', params: { dbName: 'tickets' } }
+  'update-ticket': { path: '../webhooks/update-ticket', params: { dbName: 'tickets' } }
 };
 
 var engine;

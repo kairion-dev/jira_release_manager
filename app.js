@@ -11,7 +11,7 @@ var releases = require('./routes/releases');
 var openBranches = require('./routes/openBranches');
 
 
-var WebhookEngine = require('./webhooks/webhook-engine');
+var WebhookEngine = require('./lib/webhook-engine');
 
 
 function init(jira) {

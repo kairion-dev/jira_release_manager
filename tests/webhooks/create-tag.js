@@ -7,7 +7,7 @@ var
   Promise = require('bluebird'),
   config = require('config'),
   db = require('../../lib/db.js').db(),
-  WebhookEngine = require('../../webhooks/webhook-engine-instance.js'),
+  WebhookEngine = require('../../lib/webhook-engine-instance.js'),
   Git = require('nodegit'),
   moment = require('moment'),
   Core = require('../../lib/core.js'),

@@ -19,7 +19,8 @@ var repoId = 'testgit';
 var options = {
   path: config.get('git.repositories.' + repoId + '.path'),
   name: config.get('git.repositories.' + repoId + '.name'),
-  feature_prefix: config.get('git.featurePrefix')
+  featurePrefix: config.get('git.featurePrefix'),
+  issuePrefix: config.get('jira.issuePrefix')
 };
 // init library to generate test repositories
 var RepositoryGenerator = require('../helper/repositoryGenerator.js').RepositoryGenerator;

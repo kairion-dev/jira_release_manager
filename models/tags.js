@@ -7,6 +7,7 @@ var
 
 
 module.exports = function(tagType) {
+
   var module = {};
 
   /**
@@ -15,7 +16,9 @@ module.exports = function(tagType) {
   var sortMapping = Object.keys(config.get('git.repositories')).reduce((repos, current, index) => {
     repos[current] = index;
     return repos;
-  }, {})
+  }, {});
+
+  var issuePrefix = config.get('jira.issuePrefix');
 
   module.getRepoTags = function(repository) {
     return new Promise((resolve, reject) => {
@@ -82,7 +85,7 @@ module.exports = function(tagType) {
           let quickfixes = false;
           tickets = tickets.reduce(
             (current, ticket) => {
-              if (ticket.key.startsWith('KD-0 ')) {
+              if (ticket.key.startsWith(issuePrefix.quickfix + ' ')) {
                 quickfixes = true;
               } else {
                 let issueType = (ticket.issueType == 'Bug') ? 'bugfixes' : 'features';
@@ -140,7 +143,7 @@ module.exports = function(tagType) {
   var groupUndefinedTickets = function(tickets) {
     var resultTickets = [], children = [];
     tickets.forEach((ticket) => {
-      if (ticket.key.startsWith('KD-0 ')) {
+      if (ticket.key.startsWith(issuePrefix.quickfix + ' ')) {
         children.push(ticket);
       } else {
         resultTickets.push(ticket);
@@ -149,7 +152,7 @@ module.exports = function(tagType) {
     if (children.length > 0) {
       var groupTicket = {
         key: 'Group',
-        project: 'KD',
+        project: issuePrefix.develop,
         summary: 'Quickfixes and/or undefined tickets',
         status: '-',
         issueType: '-',

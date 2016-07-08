@@ -8,7 +8,7 @@ var
   db = require('../../lib/db.js').db(require('config')),
   Core = require('../../lib/core.js'),
   KJiraHelper = require('../../lib/kjira-helper.js'),
-  WebhookEngine = require('../../lib/webhook-engine-instance.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   Webhook = require('../../webhooks/develop-on-timetracking.js'),
   sinon = require('sinon'),
   helper = require('../helper/common.js');
@@ -23,7 +23,7 @@ var jiraTransitionSelectedForDevelopment = '911';
 
 describe("Webhook 'Status To Development On Timetracking'", function() {
   var webhook;
-  var engine;
+  var service;
 
   var validWebhookRequest = {
     webhookEvent: 'jira:issue_updated',
@@ -40,20 +40,20 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
 
   before(function() {
     this.timeout(4000);
-    engine = new WebhookEngine();
+    service = new WebhookService();
     webhook = new Webhook('develop-on-timetracking');
 
     sinon.stub(webhook, 'doTransition', function(issueKey, transition) {
       return Promise.resolve({ issueKey: issueKey, request: transition });
     });
 
-    return engine.register(webhook);
+    return service.register(webhook);
   });
 
   it('Should not be executed because key is missing', function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     delete request.issue.key;
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
         res.webhookResults['develop-on-timetracking'].should.have.property('success', false);
@@ -63,7 +63,7 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
   it('Should not be executed because issue is not updated', function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     request.webhookEvent = 'jira:some_other_action';
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
@@ -71,12 +71,12 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
   it('Should not be executed because no time tracking', function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     request.issue.fields.timespent = null;
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(0);
 
         request.issue.fields.timespent = 0;
-        return engine.invoke(request);
+        return service.invoke(request);
       })
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(0);
@@ -85,13 +85,13 @@ describe("Webhook 'Status To Development On Timetracking'", function() {
   it("Should not be executed because issue status is not on 'Not planned'", function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     request.issue.fields.status.id = '12345';
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it("Should set status to 'Selected for development' when time is tracked on unplanned ticket", function() {
-    return engine.invoke(validWebhookRequest)
+    return service.invoke(validWebhookRequest)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
         res.webhookResults['develop-on-timetracking'].should.have.property('id', 'develop-on-timetracking');

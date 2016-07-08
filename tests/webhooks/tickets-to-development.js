@@ -6,7 +6,7 @@ var
 	expect = chai.expect,
 	Promise = require('bluebird'),
 	db = require('../../lib/db.js').db(require('config')),
-	WebhookEngine = require('../../lib/webhook-engine-instance.js'),
+	WebhookService = require('../../lib/webhook-service.js'),
 	Webhook = require('../../webhooks/tickets-to-development.js'),
 	sinon = require('sinon'),
 	helper = require('../helper/common.js');
@@ -30,7 +30,7 @@ function checkTransition(child, issueKey, transitionId) {
 
 describe("Webhook 'Tickets to development when moving epic to planned'", function() {
 	var webhook;
-	var engine;
+	var service;
 
 	var validWebhookRequest = {
 		webhookEvent: 'jira:issue_updated',
@@ -61,7 +61,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 
   before(function() {
     this.timeout(4000);
-    engine = new WebhookEngine();
+    service = new WebhookService();
     webhook = new Webhook('tickets-to-development');
 
     sinon.stub(webhook, 'getAllEpicChildren', function(issueKey) {
@@ -166,7 +166,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
       return Promise.resolve({ 'initTimetracking': issueKey });
     });
 
-    return engine.register(webhook);
+    return service.register(webhook);
   });
 
   it('Issue should be an epic that has been moved from not planned to selected for development', function() {
@@ -176,7 +176,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 	it('Should not be executed because key is missing', function() {
 		let request = JSON.parse(JSON.stringify(validWebhookRequest));
 		delete request.issue.key;
-		return engine.invoke(request)
+		return service.invoke(request)
 			.then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
 				res.webhookResults['tickets-to-development'].should.have.property('success', false);
@@ -186,7 +186,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
 	it('Should not be executed because issue is not updated', function() {
 		let request = JSON.parse(JSON.stringify(validWebhookRequest));
 		request.webhookEvent = 'jira:some_other_action';
-		return engine.invoke(request)
+		return service.invoke(request)
 			.then((res) => {
 				Object.keys(res.webhookResults).should.have.lengthOf(0);
 			});
@@ -195,7 +195,7 @@ describe("Webhook 'Tickets to development when moving epic to planned'", functio
     
   });
   it("Should move two of four epic children to 'Selected for development'", function() {
-    return engine.invoke(validWebhookRequest)
+    return service.invoke(validWebhookRequest)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
         var webhookResult = res.webhookResults['tickets-to-development'];

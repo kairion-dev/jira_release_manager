@@ -7,14 +7,14 @@ var
   Promise = require('bluebird'),
   config = require('config'),
   db = require('../../lib/db.js').db(),
-  WebhookEngine = require('../../lib/webhook-engine-instance.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   Git = require('nodegit'),
   moment = require('moment'),
   Core = require('../../lib/core.js'),
   helper = require('../helper/common.js');
 
 
-var engine;
+var service;
 var repoId = 'testgit';
 
 
@@ -35,7 +35,7 @@ var tickets1 = [
 
 
 beforeEach(function() {
-  engine = new WebhookEngine();
+  service = new WebhookService();
   return Generator1.init(['develop'], author)
   .then(() => GeneratorRemote.init(['develop'], author, 1)) // currently a repo can only be pushed into a remote bare
   .then(() => Generator1.createRemote('file://' + GeneratorRemote.path))
@@ -48,15 +48,15 @@ beforeEach(function() {
 describe("Webhook 'Create Tag'", function() {
   describe('Basics', function() {
     it('should not be called on empty request', function() {
-      return engine.registerByConfig(config.get('webhooks.bitbucket'))
-        .then(() => engine.invoke())
+      return service.registerByConfig(config.get('webhooks.bitbucket'))
+        .then(() => service.invoke())
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(0);
         });
     });
     it('should fail if no repository name is defined in request', function() {
-      return engine.registerByConfig(config.get('webhooks.bitbucket'))
-        .then(() => engine.invoke({ push: { what: 'ever' }}))
+      return service.registerByConfig(config.get('webhooks.bitbucket'))
+        .then(() => service.invoke({ push: { what: 'ever' }}))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(1);
           res.webhookResults['create-tag'].should.have.property('success');
@@ -66,8 +66,8 @@ describe("Webhook 'Create Tag'", function() {
         });
     });
     it('should fail if repository name is not known in configs', function() {
-      return engine.registerByConfig(config.get('webhooks.bitbucket'))
-        .then(() => engine.invoke({ push: { what: 'ever' }, repository: { name: 'invalid_repo' } }))
+      return service.registerByConfig(config.get('webhooks.bitbucket'))
+        .then(() => service.invoke({ push: { what: 'ever' }, repository: { name: 'invalid_repo' } }))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(1);
           res.webhookResults['create-tag'].should.have.property('success');
@@ -103,8 +103,8 @@ describe("Webhook 'Create Tag'", function() {
         .then(() => GeneratorRemote.createCommit([], author, 'KD-1111 commit 1'))
         .then((commit) => GeneratorRemote.repo.createTag(commit, '17.07.7', ''))
         .then(() => Generator1.pull('master'))
-        .then(() => engine.registerByConfig(config.get('webhooks.bitbucket')))
-        .then(() => engine.invoke({
+        .then(() => service.registerByConfig(config.get('webhooks.bitbucket')))
+        .then(() => service.invoke({
           repository: {
             name: 'testgit'
           },

@@ -6,7 +6,7 @@ var
   expect = chai.expect,
   Promise = require('bluebird'),
   db = require('../../lib/db.js').db(),
-  WebhookEngineInstance = require('../../lib/webhook-engine-instance.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   WebhookEngine = require('../../lib/webhook-engine.js'),
   helper = require('../helper/common.js');
 
@@ -16,25 +16,25 @@ var webhookPaths = {
 }
 
 
-describe('Webhook Instance', function() {
-  var instance;
+describe('Webhook Service', function() {
+  var service;
   beforeEach(function() {
-    instance = new WebhookEngineInstance();
+    service = new WebhookService();
   });
   describe('Basics', function() {
     it('Webhook hello_world should start up and work without any error', function() {
       let Webhook = require('./webhooks/hello-world');
-      return instance.register(new Webhook('webhook1'))
-        .then(() => instance.invoke('Hello World'))
+      return service.register(new Webhook('webhook1'))
+        .then(() => service.invoke('Hello World'))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(1);
           res.webhookResults['webhook1'].result.should.equal('Hello World');
         });
     });
-    it('Webhook instance should also work fine by passing webhooks via constructor config', function() {
+    it('Webhook service should also work fine by passing webhooks via constructor config', function() {
       let config = { 'hello_world': webhookPaths.hello_world };
-      return instance.registerByConfig(config)
-        .then(() => instance.invoke('Hello World by config'))
+      return service.registerByConfig(config)
+        .then(() => service.invoke('Hello World by config'))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(1);
           res.webhookResults['hello_world'].result.should.equal('Hello World by config');
@@ -44,8 +44,8 @@ describe('Webhook Instance', function() {
   describe('Webhook structure and logic', function() {
     it('Data passed by webhook constructor should be processed', function() {
       let Webhook = require('./webhooks/hello-world');
-      return instance.register(new Webhook('webhook1', { prefix: 'Prefix before Hello World: ' }))
-        .then(() => instance.invoke('Hello World'))
+      return service.register(new Webhook('webhook1', { prefix: 'Prefix before Hello World: ' }))
+        .then(() => service.invoke('Hello World'))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(1);
           res.webhookResults['webhook1'].result.should.equal('Prefix before Hello World: Hello World');
@@ -53,9 +53,9 @@ describe('Webhook Instance', function() {
     });
     it('Webhook should not be invoked', function() {
       let Webhook = require('./webhooks/hello-world');
-      return instance.register(new Webhook('webhook1'))
+      return service.register(new Webhook('webhook1'))
         // HelloWorldWebhook should be not executed when request equals 'dont execute'
-        .then(() => instance.invoke('dont execute'))
+        .then(() => service.invoke('dont execute'))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(0);
         });
@@ -67,9 +67,9 @@ describe('Webhook Instance', function() {
 
       let request = { a: 5, b: 3 };
 
-      return instance.registerByConfig(config) // register two webhooks by using the config
-        .then(() => instance.register(calcMult)) // and add another one manually
-        .then(() => instance.invoke(request))
+      return service.registerByConfig(config) // register two webhooks by using the config
+        .then(() => service.register(calcMult)) // and add another one manually
+        .then(() => service.invoke(request))
         .then((res) => {
           Object.keys(res.webhookResults).should.have.lengthOf(3); // we expect results from both webhooks
           res.webhookResults['hello_world'].result.should.deep.equal(request);
@@ -81,9 +81,9 @@ describe('Webhook Instance', function() {
   describe('Webhook Details', function() {
     it('Should have well-formed structure', function() {
       return db.webhooks.removeAsync({}, { multi: true })
-        .then(() => instance.registerByConfig(webhookPaths))
-        .then(() => instance.invoke({ a: 4 , b: 2 }))
-        .then(() => instance.getWebhooksData())
+        .then(() => service.registerByConfig(webhookPaths))
+        .then(() => service.invoke({ a: 4 , b: 2 }))
+        .then(() => service.getWebhooksData())
         .then((res) => {
           Object.keys(res).should.have.lengthOf(2);
           res['hello_world'].should.have.property('params');
@@ -98,10 +98,10 @@ describe('Webhook Instance', function() {
       let calcFail = new Calculator('calc_fail', { });
       let timestamp1, timestamp2;
       return db.webhooks.removeAsync({}, { multi: true })
-        .then(() => instance.registerByConfig(webhookPaths))
-        .then(() => instance.invoke({ a: 4 , b: 2 }))
+        .then(() => service.registerByConfig(webhookPaths))
+        .then(() => service.invoke({ a: 4 , b: 2 }))
         .then((res) => { timestamp1 = new Date(res.timestamp).toString(); })
-        .then(() => instance.getWebhooksData())
+        .then(() => service.getWebhooksData())
         // both webhooks should have been invoked successfully
         .then((res) => {
           Object.keys(res).should.have.lengthOf(2);
@@ -117,7 +117,7 @@ describe('Webhook Instance', function() {
           return new Promise((resolve, reject) => {
             // just wait for it ...
             setTimeout(function() {
-              instance.invoke('dont execute')
+              service.invoke('dont execute')
                 .then((res) => {
                   // save new timestamp that is at least one second higher
                   timestamp2 = new Date(res.timestamp).toString();
@@ -126,7 +126,7 @@ describe('Webhook Instance', function() {
             }, 1000);
           })
         })
-        .then(() => instance.getWebhooksData())
+        .then(() => service.getWebhooksData())
         .then((res) => {
           Object.keys(res).should.have.lengthOf(2);
           res['hello_world'].data.invoked.should.equal(1);
@@ -139,9 +139,9 @@ describe('Webhook Instance', function() {
           res['calc_add'].data.last_time_invoked.should.equal(timestamp2);
         })
         // now we add another calc webhook that has no operation and thus will fail miserably
-        .then(() => instance.register(calcFail))
-        .then(() => instance.invoke({ a: 3 , b: 3 }))
-        .then(() => instance.getWebhooksData())
+        .then(() => service.register(calcFail))
+        .then(() => service.invoke({ a: 3 , b: 3 }))
+        .then(() => service.getWebhooksData())
         .then((res) => {
           // we should have data for 3 webhooks now
           Object.keys(res).should.have.lengthOf(3);
@@ -160,36 +160,36 @@ describe('Webhook Instance', function() {
 
 describe('Webhook Engine', function() {
   var engine;
-  // helper function to test new instances
-  var checkInstances = function(engine) {
-    engine.should.have.property('instances');
-    Object.keys(engine.instances).should.have.lengthOf(2);
-    let instance = engine.instances['jira'];
-    instance.should.have.property('webhooks');
-    instance.webhooks.should.have.property('hello_world');
-    instance.webhooks.should.have.property('calc_add');
-    instance = engine.instances['bitbucket'];
-    instance.should.have.property('webhooks');
-    instance.webhooks.should.have.property('hello_world');
-    instance.webhooks.should.have.property('calc_add');
+  // helper function to test new services
+  var checkServices = function(engine) {
+    engine.should.have.property('services');
+    Object.keys(engine.services).should.have.lengthOf(2);
+    let service = engine.services['jira'];
+    service.should.have.property('webhooks');
+    service.webhooks.should.have.property('hello_world');
+    service.webhooks.should.have.property('calc_add');
+    service = engine.services['bitbucket'];
+    service.should.have.property('webhooks');
+    service.webhooks.should.have.property('hello_world');
+    service.webhooks.should.have.property('calc_add');
   };
   // testing
-  it('Manually create instances', function() {
+  it('Manually create services', function() {
     engine = new WebhookEngine();
-    engine.newInstance('jira', '/jira', webhookPaths);
-    engine.newInstance('bitbucket', '/bitbucket', webhookPaths);
-    checkInstances(engine);
+    engine.newService('jira', '/jira', webhookPaths);
+    engine.newService('bitbucket', '/bitbucket', webhookPaths);
+    checkServices(engine);
   });
-  it('Using the config should result in the same instances', function() {
+  it('Using the config should result in the same services', function() {
     engine = new WebhookEngine();
     let config = { 'jira': webhookPaths, 'bitbucket': webhookPaths };
     engine.init(config);
-    checkInstances(engine);
+    checkServices(engine);
   });
-  it('No instance while initializing should result in an error', function() {
+  it('No service cause initializing should result in an error', function() {
     engine = new WebhookEngine();
     expect(function() {
       return engine.init();
-    }).to.throw('No webhook engine instance registered. Please use WebhookEngine.newInstance() or provide a config in WebhookEngine.init()');
+    }).to.throw('No webhook service registered. Please use WebhookEngine.newService() or provide a config in WebhookEngine.init()');
   });
 });

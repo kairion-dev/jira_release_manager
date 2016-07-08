@@ -38,7 +38,6 @@ function checkTicket(ticket, summary, epicsId, projectId, issueTypeId, assigneeN
   ticket[epicsKey].should.equal(epicsId);
 }
 
-
 describe("Webhook 'Create Auxiliary Tickets'", function() {
   describe('Test Kairion specific Jira functionality', function() {
     it('Request resulting from createAuxiliaryIssueRequest() is well-formed', function() {
@@ -84,7 +83,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
     };
 
     before(function() {
-      this.timeout(4000);
+      this.timeout(4000); // the test is waiting a bit longer before failing
       engine = new WebhookEngine();
       webhook = new Webhook('create-auxiliary-tickets');
 

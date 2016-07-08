@@ -133,7 +133,7 @@ class TicketsToDevelopment extends Webhook {
    * Find a Jira issue.
    * 
    * @param  {String} issueKey
-   *   e.g. 'KD-10790'
+   *   e.g. 'XX-1234'
    * @return {Promise<JiraIssue>}
    */
   findIssue(issueKey) {
@@ -145,7 +145,7 @@ class TicketsToDevelopment extends Webhook {
    * Get time estimates for the given issues.
    * 
    * @param  {Array{String}} issueKeys
-   *   e.g. ['KD-10790', 'KD-8997']
+   *   e.g. ['XX-1234', 'XX-5678']
    * @return {Promise<Array<JiraIssue>>}
    */
   getTimeEstimates(issueKeys) {

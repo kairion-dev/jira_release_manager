@@ -134,7 +134,7 @@ module.exports = function(tagType) {
   };
   
   /**
-   * Group KD-xxxx tickets as children to one ticket.
+   * Group XX-1234 tickets as children to one ticket.
    * 
    * @param  {Array<Ticket>} tickets
    * @return {Array<Ticket>}

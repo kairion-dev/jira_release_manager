@@ -8,7 +8,7 @@ var
   db = require('../../lib/db.js').db(require('config')),
   Core = require('../../lib/core.js'),
   KJiraHelper = require('../../lib/kjira-helper.js'),
-  WebhookEngine = require('../../webhooks/webhook-engine.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   Webhook = require('../../webhooks/tickets-to-deploy-after-release.js'),
   sinon = require('sinon'),
   helper = require('../helper/common.js');
@@ -32,7 +32,7 @@ function checkTransition(child, issueKey, transitionId) {
 
 describe("Webhook 'Tickets to deploy after release'", function() {
   var webhook;
-  var engine;
+  var service;
 
   var validWebhookRequest = {
     webhookEvent: 'jira:issue_updated',
@@ -63,7 +63,7 @@ describe("Webhook 'Tickets to deploy after release'", function() {
 
   before(function() {
     this.timeout(4000);
-    engine = new WebhookEngine();
+    service = new WebhookService();
     webhook = new Webhook('tickets-to-deployed-after-release');
 
     sinon.stub(webhook, 'getAllEpicChildren', function(issueKey) {
@@ -98,7 +98,7 @@ describe("Webhook 'Tickets to deploy after release'", function() {
       } 
     });
 
-    return engine.register(webhook);
+    return service.register(webhook);
   });
 
   it.skip('Issue that has been moved to deployed should be of type epic', function() {
@@ -108,7 +108,7 @@ describe("Webhook 'Tickets to deploy after release'", function() {
   it('Should not be executed because key is missing', function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     delete request.issue.key;
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
         res.webhookResults['tickets-to-deployed-after-release'].should.have.property('success', false);
@@ -118,13 +118,13 @@ describe("Webhook 'Tickets to deploy after release'", function() {
   it('Should not be executed because issue is not updated', function() {
     let request = JSON.parse(JSON.stringify(validWebhookRequest));
     request.webhookEvent = 'jira:some_other_action';
-    return engine.invoke(request)
+    return service.invoke(request)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(0);
       });
   });
   it("Should move three of four epic children to 'Deployed'", function() {
-    return engine.invoke(validWebhookRequest)
+    return service.invoke(validWebhookRequest)
       .then((res) => {
         Object.keys(res.webhookResults).should.have.lengthOf(1);
         var webhookResult = res.webhookResults['tickets-to-deployed-after-release'];

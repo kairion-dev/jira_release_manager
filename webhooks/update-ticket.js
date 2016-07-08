@@ -3,10 +3,11 @@
 var Promise = require('bluebird'),
   // we initialize the database connection here but use the configurable params.dbName to select the right database
   db = require('../lib/db.js').db(),
+  config = require('config'),
   Webhook = require('./abstract-webhook');
 
 class UpdateTicket extends Webhook {
-
+  
   /**
    * @param  {String} id
    *   The webhook identifier
@@ -17,7 +18,13 @@ class UpdateTicket extends Webhook {
     if (!params || !params.dbName) {
       throw new Error('Database name must be specified in params.dbName');
     }
+    params.epicsKey = config.get('jira.epicsKey');
+    params.newCapKey = config.get('jira.newCapKey');
     super(id, params);
+  }
+
+  description() {
+    return 'Update ticket properties in the release-manager as soon as the corresponding Jira ticket is updated.';
   }
 
   /**

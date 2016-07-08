@@ -1,5 +1,5 @@
 var
-  log = require('./lib/logger.js'),
+  log = require('./lib/logger.js').releasemanager,
   Promise = require('bluebird'),
   config = require('config'),
   http = require('http'),

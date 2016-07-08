@@ -8,9 +8,10 @@ mixin modalWebhookDetails(id, webhook)
         .modal-header
           button(type="button", data-dismiss="modal", aria-label="Close").close
             span(aria-hidden="true").glyphicon.glyphicon-remove
-          h4.modal-title Webhook details for "#{id}"
+          h4.modal-title Details of Webhook: #{id}
         .modal-body
-          p Some more details are coming soon
+          b Short Description
+          p= webhook.description
 
 block content
     h1.page-header= title

@@ -8,7 +8,7 @@ var
   db = require('../../lib/db.js').db(require('config')),
   Core = require('../../lib/core.js'),
   KJiraHelper = require('../../lib/kjira-helper.js'),
-  WebhookEngine = require('../../webhooks/webhook-engine.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   Webhook = require('../../webhooks/create-auxiliary-tickets.js'),
   sinon = require('sinon'),
   helper = require('../helper/common.js');
@@ -37,7 +37,6 @@ function checkTicket(ticket, summary, epicsId, projectId, issueTypeId, assigneeN
   ticket.assignee.name.should.equal(assigneeName);
   ticket[epicsKey].should.equal(epicsId);
 }
-
 
 describe("Webhook 'Create Auxiliary Tickets'", function() {
   describe('Test Kairion specific Jira functionality', function() {
@@ -74,7 +73,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
   describe('Test webhook functionality', function() {
 
     var webhook;
-    var engine;
+    var service;
 
     var validWebhookRequest = {
       webhookEvent: 'jira:issue_created',
@@ -84,8 +83,8 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
     };
 
     before(function() {
-      this.timeout(4000);
-      engine = new WebhookEngine();
+      this.timeout(4000); // the test is waiting a bit longer before failing
+      service = new WebhookService();
       webhook = new Webhook('create-auxiliary-tickets');
 
       // fake mapping bwetween issueTypeIds and issueTypeNames
@@ -132,12 +131,12 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       sinon.stub(webhook, 'addIssue', function(issueRequest) {
         return issueRequest;
       });
-      return engine.register(webhook);
+      return service.register(webhook);
     });
 
     describe('Test shouldBeExecuted()', function() {
       it('should work with a valid webhook request', function() {
-        return engine.invoke(validWebhookRequest)
+        return service.invoke(validWebhookRequest)
           .then((res) => {
             Object.keys(res.webhookResults).should.have.lengthOf(1);
             res.webhookResults['create-auxiliary-tickets'].should.have.property('success', true);
@@ -147,7 +146,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       it('should not be executed when key is missing', function() {
         let invalidRequest = JSON.parse(JSON.stringify(validWebhookRequest));
         delete invalidRequest.issue;
-        return engine.invoke(invalidRequest)
+        return service.invoke(invalidRequest)
           .then((res) => {
             Object.keys(res.webhookResults).should.have.lengthOf(1);
             res.webhookResults['create-auxiliary-tickets'].should.have.property('success', false);
@@ -157,7 +156,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       it('should not be executed when key is not found in Jira', function() {
         let request = JSON.parse(JSON.stringify(validWebhookRequest));
         request.issue.key = 'does not exist';
-        return engine.invoke(request)
+        return service.invoke(request)
           .then((res) => {
             Object.keys(res.webhookResults).should.have.lengthOf(0);
           })
@@ -165,7 +164,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
       it('should not be executed when created issue is no epic', function() {
         let request = JSON.parse(JSON.stringify(validWebhookRequest));
         request.issue.key = 'KTEST-1111';
-        return engine.invoke(request)
+        return service.invoke(request)
           .then((res) => {
             Object.keys(res.webhookResults).should.have.lengthOf(0);
           })
@@ -173,7 +172,7 @@ describe("Webhook 'Create Auxiliary Tickets'", function() {
     });
     describe('Test generating auxiliary tickets', function() {
       it('Test Jira Rest API requests to add auxiliary tickets', function() {
-        return engine.invoke(validWebhookRequest)
+        return service.invoke(validWebhookRequest)
           .then((res) => {
             Object.keys(res.webhookResults).should.have.lengthOf(1);
             var tickets = res.webhookResults['create-auxiliary-tickets'].result;

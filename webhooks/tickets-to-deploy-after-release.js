@@ -5,7 +5,7 @@ var
   config = require('config'),
   db = require('../lib/db.js').db(),
   Core = require('../lib/core.js'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   Webhook = require('./abstract-webhook');
 
 class TicketsToDeployAfterRelease extends Webhook {
@@ -21,6 +21,10 @@ class TicketsToDeployAfterRelease extends Webhook {
     this.jira = new Core().jira;
     this.statusDeployed = config.get('jira.status.deployed');
     this.transitionDeployed = config.get('jira.transition.deployed');
+  }
+
+  description() {
+    return 'As soon as an epic ticket is moved to "Deployed", all children are also moved.';
   }
 
   /**

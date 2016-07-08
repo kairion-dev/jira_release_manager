@@ -38,6 +38,7 @@ tickets
 
 # Data used for testing
 tests/data
+tests/webhooks/.repositories
 
 # Temporary data
 temp

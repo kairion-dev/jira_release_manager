@@ -2,13 +2,21 @@ http:
   host: localhost
   port: 3000
 log:
-  level: 'info'
-  filename: '/tmp/jrm.log'
+  releasemanager:
+    level: 'info'
+    filename: 'jrm.log'
+  webhooks:
+    level: 'info'
+    filename: 'webhooks.log'
 databases:
   tags: 'tests/data/temp-dbs/tags'
   tickets: 'tests/data/temp-dbs/tickets'
   webhooks: 'tests/data/temp-dbs/webhooks-data'
 jira:
+  issuePrefix:
+    regex: '^(K..?-\d+)'
+    develop: 'KD'
+    quickfix: 'KD-0'
   host: 'kairion.atlassian.net'
   epicsKey: 'customfield_10500'
   newCapKey: 'customfield_13103'

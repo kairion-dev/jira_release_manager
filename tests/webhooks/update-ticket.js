@@ -5,7 +5,7 @@ var
   should = chai.should(),
   Promise = require('bluebird'),
   db = require('../../lib/db.js').db(require('config')),
-  WebhookEngine = require('../../webhooks/webhook-engine.js'),
+  WebhookService = require('../../lib/webhook-service.js'),
   helper = require('../helper/common.js');
 
 let tickets1 = [
@@ -14,13 +14,13 @@ let tickets1 = [
 ];
 
 let config = {
-  'update-ticket': { path: './update-ticket', params: { dbName: 'tickets' } }
+  'update-ticket': { path: '../webhooks/update-ticket', params: { dbName: 'tickets' } }
 };
 
-var engine;
+var service;
 
 beforeEach(function() {
-  engine = new WebhookEngine();
+  service = new WebhookService();
   return db.tickets.removeAsync({}, { multi: true })
     .then(() => {
       return Promise.map(tickets1, (ticket) => {
@@ -31,8 +31,8 @@ beforeEach(function() {
 
 describe("Webhook 'Update Ticket'", function() {
   it('Webhook should not update non existing tickets', function() {
-    return engine.registerByConfig(config)
-      .then(() => engine.invoke({
+    return service.registerByConfig(config)
+      .then(() => service.invoke({
           webhookEvent: 'jira:issue_updated',
           issue: {
             key: 'KD-2222',
@@ -47,9 +47,9 @@ describe("Webhook 'Update Ticket'", function() {
       })
   });
   it('Should not change anything cause wrong webhookEvent', function() {
-    return engine.registerByConfig(config)
+    return service.registerByConfig(config)
       // empty request data so nothing should be changed
-      .then(() => engine.invoke({}))
+      .then(() => service.invoke({}))
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
         docs.should.have.lengthOf(tickets1.length); // we should have all tickets inserted initially
@@ -57,7 +57,7 @@ describe("Webhook 'Update Ticket'", function() {
         docs.should.contain.deep(tickets1[0]);
       })
       // wrong webhookEvent so again nothing should be changed
-      .then(() => engine.invoke({ webhookEvent: 'some_other_event' }))
+      .then(() => service.invoke({ webhookEvent: 'some_other_event' }))
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
         docs.should.have.lengthOf(tickets1.length); // we should have all tickets inserted initially
@@ -66,8 +66,8 @@ describe("Webhook 'Update Ticket'", function() {
       });
   });
   it('Should not change anything cause key does not exist', function() {
-    return engine.registerByConfig(config)
-      .then(() => engine.invoke({
+    return service.registerByConfig(config)
+      .then(() => service.invoke({
         webhookEvent: 'jira:issue_updated'
       }))
       // database should contain the ticket inserted
@@ -79,14 +79,14 @@ describe("Webhook 'Update Ticket'", function() {
       })
   });
   it('Simple update', function() {
-    return engine.registerByConfig(config)
+    return service.registerByConfig(config)
       // database should contain the ticket inserted
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
         docs.should.have.lengthOf(tickets1.length);
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
-        return engine.invoke({
+        return service.invoke({
           webhookEvent: 'jira:issue_updated',
           issue: {
             key: 'KD-1111',
@@ -117,8 +117,8 @@ describe("Webhook 'Update Ticket'", function() {
       })
   });
   it('Updating epicsKey defined by customfield should work', function() {
-    return engine.registerByConfig(config, { epicsKey: 'customfield_10500'})
-      .then(() => engine.invoke({
+    return service.registerByConfig(config)
+      .then(() => service.invoke({
         webhookEvent: 'jira:issue_updated',
         issue: {
           key: 'KD-1111',
@@ -134,7 +134,7 @@ describe("Webhook 'Update Ticket'", function() {
         helper.removeIds(docs);
         docs.should.contain.deep(tickets1[0]);
       })
-      .then(() => engine.invoke({
+      .then(() => service.invoke({
         webhookEvent: 'jira:issue_updated',
         issue: {
           key: 'KD-1111',
@@ -153,7 +153,7 @@ describe("Webhook 'Update Ticket'", function() {
       })
   });
   it('Updates with components should trigger successful update and not break anything', function() {
-    return engine.registerByConfig(config)
+    return service.registerByConfig(config)
       .then(() => db.tickets.findAsync({ }))
       .then((docs) => {
         docs.should.have.lengthOf(tickets1.length);
@@ -161,7 +161,7 @@ describe("Webhook 'Update Ticket'", function() {
         docs.should.contain.deep(tickets1[1]);
       })
       // request does not contain any component but all other fields should be updated successfully
-      .then(() => engine.invoke({
+      .then(() => service.invoke({
         timestamp: 1464941097428,
         webhookEvent: "jira:issue_updated",
         issue: {
@@ -187,7 +187,7 @@ describe("Webhook 'Update Ticket'", function() {
         docs['KD-10609'].should.have.property('status', "Selected for Development");
       })
       // now it does contain components which also should be updated
-      .then(() => engine.invoke({
+      .then(() => service.invoke({
         timestamp: 1464941099000,
         webhookEvent: "jira:issue_updated",
         issue: {

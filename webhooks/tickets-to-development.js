@@ -5,7 +5,7 @@ var
   config = require('config'),
   db = require('../lib/db.js').db(),
   Core = require('../lib/core.js'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   Webhook = require('./abstract-webhook');
 
 class TicketsToDevelopment extends Webhook {
@@ -22,6 +22,11 @@ class TicketsToDevelopment extends Webhook {
     this.transitionId = config.get('jira.transition.selectedForDevelopment');
     this.statusNotPlanned = config.get('jira.status.notPlanned');
     this.statusSelectedForDevelopment = config.get('jira.status.selectedForDevelopment');
+  }
+
+
+  description() {
+    return 'Is executed as soon as an epic ticket is moved from "Not Planned" to "Selected For Development". Moves all children, which means normal tickets and subtickets, to "Selected For Development" if not yet planned.';
   }
 
 
@@ -74,19 +79,18 @@ class TicketsToDevelopment extends Webhook {
 
   /**
    * Check if a ticket of type epic is moved from planned to selected for development
+   * 
    * @param  {Jira Callback} data
    * @return {Promise<Boolean>}
    *   true, if the ticket is an epic and correctly moved
    *   false, otherwise
    */
   epicMovedFromNotPlannedToDevelopment(data) {
-    return Promise.filter(data.changelog.items, (item) => {
-      return item.field == 'status';
-    })
-      .then((res) => {
-        return data.issue.fields.issuetype.id == config.get('jira.issueType.epic') &&
-          res.length > 0 && res[0].to == this.statusSelectedForDevelopment;
-      });
+    var items = data.changelog && data.changelog.items ? data.changelog.items : [];
+    // returns true if at least one item fullfils the requirements
+    return Promise.reduce(items, (result, item) => {
+      return result || (item.field == 'status' && data.issue.fields.issuetype.id == config.get('jira.issueType.epic') && item.to == this.statusSelectedForDevelopment);
+    }, false);
   }
 
 
@@ -129,7 +133,7 @@ class TicketsToDevelopment extends Webhook {
    * Find a Jira issue.
    * 
    * @param  {String} issueKey
-   *   e.g. 'KD-10790'
+   *   e.g. 'XX-1234'
    * @return {Promise<JiraIssue>}
    */
   findIssue(issueKey) {
@@ -141,7 +145,7 @@ class TicketsToDevelopment extends Webhook {
    * Get time estimates for the given issues.
    * 
    * @param  {Array{String}} issueKeys
-   *   e.g. ['KD-10790', 'KD-8997']
+   *   e.g. ['XX-1234', 'XX-5678']
    * @return {Promise<Array<JiraIssue>>}
    */
   getTimeEstimates(issueKeys) {

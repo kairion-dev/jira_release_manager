@@ -2,7 +2,7 @@
 
 var
   Promise = require('bluebird'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   Webhook = require('./abstract-webhook');
 
 class LoggerIssueUpdated extends Webhook {
@@ -15,6 +15,10 @@ class LoggerIssueUpdated extends Webhook {
    */
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.webhookEvent && data.webhookEvent == 'jira:issue_updated');
+  }
+
+  description() {
+    return 'Just logs all incoming "jira:issue_updated" requests';
   }
 
   /**

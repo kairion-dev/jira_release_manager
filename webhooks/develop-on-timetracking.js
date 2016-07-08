@@ -21,6 +21,10 @@ class StatusToDevelopOnTimetracking extends Webhook {
     this.jira = new Core().jira;
   }
 
+  description() {
+    return 'Set ticket status to "Selected for development" as soon as time is tracked on the ticket.';
+  }
+
   /**
    * Proceed when time is tracked and ticket is not planned yet
    * 

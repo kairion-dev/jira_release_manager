@@ -1,7 +1,7 @@
 "use strict";
 
 var Promise = require('bluebird'),
-  log = require('../lib/logger.js'),
+  log = require('../lib/logger.js').webhooks,
   config = require('config'),
   Core = require('../lib/core.js'),
   Webhook = require('./abstract-webhook.js');
@@ -19,6 +19,10 @@ class CreateTag extends Webhook {
   shouldBeExecuted(data) {
     return Promise.resolve(data && data.push);
   };
+
+  description() {
+    return 'Reinitialize repository if data is pushed in order to get new tags for the release page.';
+  }
 
   /**
    * Reinitialize updated repository in order to get new tags for the release page.
@@ -44,6 +48,9 @@ class CreateTag extends Webhook {
       .then((res) => {
         log.info("git fetch for repo '" + repoId + "' " + res.stdout + " " + res.stderr);
         return core.initRepository(repoId); 
+      })
+      .then((res) => {
+        return { tickets: res.length };
       })
       .catch((e) => {
         log.error('Error while executing git fetch for \'' + gitPath + '\': ', e);

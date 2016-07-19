@@ -34,7 +34,7 @@ class CreateTag extends Webhook {
     if (!data.repository || !data.repository.name) {
       return Promise.reject('data.repository.name must be defined');
     }
-    var repoId = data.repository.name;
+    var repoId = data.repository.name.toLowerCase();
 
     if (!config.has('git.repositories.' + repoId)) {
       return Promise.reject('config does not contain a repository called \'' + data.repository.name + '\'');
